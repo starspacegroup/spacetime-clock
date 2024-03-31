@@ -1,4 +1,16 @@
 <script>
+  let datetime = new Date()
+  var dayOfYear =
+    (Date.UTC(datetime.getFullYear(), datetime.getMonth(), datetime.getDate()) -
+      Date.UTC(datetime.getFullYear(), 0, 0)) /
+    86400000
+
+  let date360 = (dayOfYear / 365.25) * 360
+  let time360 = (datetime.getHours() / 24) * 360
+
+  let date100 = (date360 / 360) * 100
+  let time100 = (time360 / 360) * 100
+
   const dayDeg = 90 * 3
   const nightDeg = 90
   const noonDeg = 0
@@ -14,7 +26,9 @@
         <circle class="fg"></circle>
       </svg>
 
-      <div class="flex items-center justify-center h-full text-6xl">42</div>
+      <div class="flex items-center justify-center h-full text-6xl">
+        {date360.toFixed(0)}
+      </div>
     </div>
     <div class="timedonut h-60 w-60 md:h-96 md:w-96 rounded-full">
       <svg class="circular-progress-time h-60 w-60 md:h-96 md:w-96">
@@ -25,7 +39,7 @@
       <div
         class="flex items-center h-full w-full justify-center text-6xl timeindicator"
       >
-        <div>222</div>
+        <div>{time360.toFixed()}</div>
       </div>
     </div>
   </div>
