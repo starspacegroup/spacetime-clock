@@ -4,14 +4,14 @@
   const noonDeg = 0
 </script>
 
-<div class="flex bg-black min-h-screen p-8 text-white">
-  <div class="m-auto md:flex md:space-x-8 space-y-8 md:space-y-0">
-    <div
-      class="daydonut bg-[conic-gradient(#9233ea,#db2777,#2564eb)] h-96 w-96 rounded-full"
-    >
+<div class="flex bg-black min-h-screen text-white">
+  <div
+    class="m-auto md:flex space-x-0 md:space-x-8 space-y-8 md:space-y-0 items-center justify-center text-center"
+  >
+    <div class="daydonut h-60 w-60 md:h-96 md:w-96 rounded-full">
       <div class="flex items-center justify-center h-full text-6xl">35</div>
     </div>
-    <div id="" class="timedonut h-96 w-96">
+    <div id="" class="timedonut h-60 w-60 md:h-96 md:w-96 rounded-full">
       <div class="flex items-center justify-center h-full text-6xl">270</div>
     </div>
   </div>
