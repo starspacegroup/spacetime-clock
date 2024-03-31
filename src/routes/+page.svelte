@@ -1,5 +1,6 @@
 <script lang="ts">
   import { browser } from "$app/environment"
+  import { walk } from "svelte/compiler"
 
   let datetime = new Date()
   var dayOfYear =
@@ -8,7 +9,13 @@
     86400000
 
   let date360 = (dayOfYear / 365.25) * 360
-  let time360 = (datetime.getHours() / 24) * 360
+  let time360 = (datetime.getMinutes() / 24 / 60) * 360
+
+  let refresher = setInterval(function () {
+    datetime = new Date()
+    date360 = 42
+    time360 = 222
+  }, 1000)
 
   let time100 = (time360 / 360) * 100
 
