@@ -112,30 +112,44 @@
   let progresstime = time100
 </script>
 
-<div class="flex bg-black min-h-screen text-white">
-  <div
-    class="m-auto md:flex space-x-0 md:space-x-8 space-y-8 md:space-y-0 items-center justify-center text-center"
-  >
-    <div class="daydonut h-60 w-60 md:h-96 md:w-96 rounded-full">
-      <svg class="circular-progress-date h-60 w-60 md:h-96 md:w-96">
-        <circle class="bg"></circle>
-        <circle class="fg"></circle>
-      </svg>
+<div class="flex-col bg-black text-white">
+  <div class="flex items-center justify-center text-3xl">
+    {datetime.getUTCFullYear() +
+      "/" +
+      (datetime.getUTCMonth() + 1) +
+      "/" +
+      datetime.getUTCDate()}
+    {datetime.getUTCHours()}:{datetime.getUTCMinutes()}:{datetime
+      .getUTCSeconds()
+      .toString()
+      .padStart(2, "0")}
+    GMT/UST
+  </div>
+  <div class="flex bg-black min-h-screen text-white">
+    <div
+      class="m-auto md:flex space-x-0 md:space-x-8 space-y-8 md:space-y-0 items-center justify-center text-center"
+    >
+      <div class="daydonut h-60 w-60 md:h-96 md:w-96 rounded-full">
+        <svg class="circular-progress-date h-60 w-60 md:h-96 md:w-96">
+          <circle class="bg"></circle>
+          <circle class="fg"></circle>
+        </svg>
 
-      <div class="flex items-center justify-center h-full text-6xl">
-        {date360.toFixed(0)}
+        <div class="flex items-center justify-center h-full text-6xl">
+          {date360.toFixed(0)}
+        </div>
       </div>
-    </div>
-    <div class="timedonut h-60 w-60 md:h-96 md:w-96 rounded-full">
-      <svg class="circular-progress-time h-60 w-60 md:h-96 md:w-96">
-        <circle class="bg"></circle>
-        <circle class="fg"></circle>
-      </svg>
+      <div class="timedonut h-60 w-60 md:h-96 md:w-96 rounded-full">
+        <svg class="circular-progress-time h-60 w-60 md:h-96 md:w-96">
+          <circle class="bg"></circle>
+          <circle class="fg"></circle>
+        </svg>
 
-      <div
-        class="flex items-center h-full w-full justify-center text-6xl timeindicator"
-      >
-        <div>{time360.toFixed()}</div>
+        <div
+          class="flex items-center h-full w-full justify-center text-6xl timeindicator"
+        >
+          <div>{time360.toFixed()}</div>
+        </div>
       </div>
     </div>
   </div>
