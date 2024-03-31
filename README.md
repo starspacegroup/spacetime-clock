@@ -1,6 +1,6 @@
 # SpaceTime Clock
 
-This is an Svelte app that displays the current date and time in a unique way.
+This is a SvelteKit app that displays the current date and time in a unique way.
 
 ## Developing
 
