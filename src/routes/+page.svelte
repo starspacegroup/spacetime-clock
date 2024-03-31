@@ -92,7 +92,7 @@
       --progress: 0;
     }
     to {
-      --progress: 18;
+      --progress: 11.66;
     }
   }
 
@@ -152,7 +152,7 @@
       --progress: 0;
     }
     to {
-      --progress: 77;
+      --progress: 61;
     }
   }
 </style>
