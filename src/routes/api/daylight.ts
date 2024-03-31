@@ -1,32 +1,25 @@
-import { get } from "svelte/store"
 import { json } from "@sveltejs/kit/http"
-import { LocationInfo, sun } from "astral"
+import SunCalc from "suncalc"
 
 export async function get({ query }) {
   const { latitude, longitude } = query
 
-  const location = new LocationInfo(
-    "",
-    "",
-    "",
-    Number(latitude),
-    Number(longitude)
-  )
+  const { sunrise, sunset } = SunCalc.getTimes(new Date(), latitude, longitude)
+
   const now = new Date()
-  const s = sun(location.observer, { date: now, tzinfo: location.timezone })
-  const sunrise = s.sunrise.getTime()
-  const sunset = s.sunset.getTime()
+  const sunriseTime = sunrise.getTime()
+  const sunsetTime = sunset.getTime()
 
   let elapsedDaylight
-  if (now < sunrise) {
+  if (now < sunriseTime) {
     elapsedDaylight = 0
-  } else if (now > sunset) {
-    elapsedDaylight = sunset - sunrise
+  } else if (now > sunsetTime) {
+    elapsedDaylight = sunsetTime - sunriseTime
   } else {
-    elapsedDaylight = now.getTime() - sunrise
+    elapsedDaylight = now.getTime() - sunriseTime
   }
 
-  const daylightDuration = sunset - sunrise
+  const daylightDuration = sunsetTime - sunriseTime
   const daylightPercentage = (elapsedDaylight / daylightDuration) * 100
 
   return json({ percentage: daylightPercentage })
