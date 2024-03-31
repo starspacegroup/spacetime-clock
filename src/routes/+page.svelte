@@ -16,6 +16,11 @@
     </div>
   </div>
 </div>
+<footer class="text-center bg-black text-white p-8">
+  <a href="https://github.com/starspacegroup/spacetime-clock"
+    >Open Source on GitHub</a
+  >
+</footer>
 
 <style>
   .daydonut {
