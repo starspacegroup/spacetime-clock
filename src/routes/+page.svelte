@@ -11,7 +11,7 @@
     <div class="daydonut h-60 w-60 md:h-96 md:w-96 rounded-full">
       <div class="flex items-center justify-center h-full text-6xl">35</div>
     </div>
-    <div id="" class="timedonut h-60 w-60 md:h-96 md:w-96 rounded-full">
+    <div class="timedonut h-60 w-60 md:h-96 md:w-96 rounded-full">
       <div class="flex items-center justify-center h-full text-6xl">270</div>
     </div>
   </div>
