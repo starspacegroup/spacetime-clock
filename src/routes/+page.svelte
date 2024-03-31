@@ -14,7 +14,7 @@
         <circle class="fg"></circle>
       </svg>
 
-      <div class="flex items-center justify-center h-full text-6xl">35</div>
+      <div class="flex items-center justify-center h-full text-6xl">42</div>
     </div>
     <div class="timedonut h-60 w-60 md:h-96 md:w-96 rounded-full">
       <svg class="circular-progress-time h-60 w-60 md:h-96 md:w-96">
@@ -25,7 +25,7 @@
       <div
         class="flex items-center h-full w-full justify-center text-6xl timeindicator"
       >
-        <div>270</div>
+        <div>222</div>
       </div>
     </div>
   </div>
