@@ -116,13 +116,13 @@
   <div class="flex items-center justify-center text-3xl">
     {datetime.getUTCFullYear() +
       "/" +
-      (datetime.getUTCMonth() + 1) +
+      (datetime.getUTCMonth() + 1).toString().padStart(2, "0") +
       "/" +
-      datetime.getUTCDate()}
-    {datetime.getUTCHours()}:{datetime.getUTCMinutes()}:{datetime
-      .getUTCSeconds()
+      datetime.getUTCDate().toString().padStart(2, "0")}
+    {datetime.getUTCHours().toString().padStart(2, "0")}:{datetime
+      .getUTCMinutes()
       .toString()
-      .padStart(2, "0")}
+      .padStart(2, "0")}:{datetime.getUTCSeconds().toString().padStart(2, "0")}
     GMT/UST
   </div>
   <div class="flex bg-black min-h-screen text-white">
