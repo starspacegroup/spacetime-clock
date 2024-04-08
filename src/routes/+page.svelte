@@ -1,8 +1,12 @@
 <script lang="ts">
   import { browser } from "$app/environment"
   import { walk } from "svelte/compiler"
+  import stardate from "stardate-converter"
 
   let datetime = new Date()
+
+  let currentStardate = stardate(datetime)
+
   var dayOfYear =
     (Date.UTC(datetime.getFullYear(), datetime.getMonth(), datetime.getDate()) -
       Date.UTC(datetime.getFullYear(), 0, 0)) /
@@ -113,7 +117,7 @@
 </script>
 
 <div class="flex-col bg-black text-white">
-  <div class="flex items-center justify-center text-3xl">
+  <div class="flex items-center justify-center text-3xl p-8">
     {datetime.getUTCFullYear() +
       "/" +
       (datetime.getUTCMonth() + 1).toString().padStart(2, "0") +
@@ -124,6 +128,9 @@
       .toString()
       .padStart(2, "0")}:{datetime.getUTCSeconds().toString().padStart(2, "0")}
     GMT/UST
+  </div>
+  <div class="flex items-center justify-center">
+    Stardate: {currentStardate}
   </div>
   <div class="flex bg-black min-h-screen text-white">
     <div
