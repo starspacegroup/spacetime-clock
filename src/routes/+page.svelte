@@ -44,7 +44,8 @@
     0
   )
 
-  let secondsSinceNoon: number = datetime.getTime() - lastNoon.getTime() / 1000
+  let secondsSinceLastNoon: number =
+    datetime.getTime() - lastNoon.getTime() / 1000
   let solarData = {}
   let currentStardate = stardate(datetime)
 
@@ -80,6 +81,13 @@
             0,
             0
           )
+      if (new Date() < solarData.solarNoon) {
+        solarData = suncalc.getTimes(
+          new Date(Date.now() - 24 * 60 * 60 * 1000),
+          e.detail.coords.latitude,
+          e.detail.coords.longitude
+        )
+      }
       sunrise = solarData.sunrise
         ? solarData.sunrise
         : new Date(
@@ -100,8 +108,10 @@
             0,
             0
           )
-      secondsSinceNoon = (datetime.getTime() - lastNoon.getTime()) / 1000
-      time360 = (secondsSinceNoon / 86400) * 359
+      secondsSinceLastNoon = Math.abs(
+        (datetime.getTime() - lastNoon.getTime()) / 1000
+      )
+      time360 = (secondsSinceLastNoon / 86400) * 359
 
       time360deg = time360 - 90 + "deg"
       sunrise360 = ((sunrise.getTime() % 86400) / 86400) * 359 + 90
@@ -121,13 +131,15 @@
       e.detail.coords.latitude,
       e.detail.coords.longitude
     )
-    hemisphere = getHemisphere(
-      e.detail.coords.latitude,
-      e.detail.coords.longitude
-    )
+    if (new Date() < solarData.solarNoon) {
+      solarData = suncalc.getTimes(
+        new Date(Date.now() - 24 * 60 * 60 * 1000),
+        e.detail.coords.latitude,
+        e.detail.coords.longitude
+      )
+    }
+    hemisphere = getHemisphere(e.detail.coords.latitude)
     summerSolstice = hemisphere === "North" ? juneSolstice : decemberSolstice
-    console.log(e.detail) // GeolocationPosition
-    console.log(solarData.solarNoon)
   }}
   on:error={(e) => {
     geoEvents = [...geoEvents, e.detail]
