@@ -161,7 +161,7 @@
       .getUTCMinutes()
       .toString()
       .padStart(2, "0")}:{datetime.getUTCSeconds().toString().padStart(2, "0")}
-    GMT/UST
+    UTC/GMT
   </div>
   <div class="flex items-center justify-center text-3xl">
     Stardate: {currentStardate}
