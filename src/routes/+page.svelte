@@ -19,6 +19,7 @@
   // let decemberSolstice = seasons.dec_solstice
 
   let geoEvents: any = []
+  let coords = { lat: 0, long: 0 }
   let lastNoon: Date = new Date(
     datetime.getFullYear(),
     datetime.getMonth(),
@@ -71,6 +72,16 @@
     let refresher = setInterval(function () {
       datetime = new Date()
       date360 = (dayOfYear / 365.25) * 359
+      if (geoEvents.length > 0) {
+        solarData = suncalc.getTimes(new Date(), coords.lat, coords.long)
+        if (new Date() < solarData.solarNoon) {
+          solarData = suncalc.getTimes(
+            new Date(Date.now() - 24 * 60 * 60 * 1000),
+            coords.lat,
+            coords.long
+          )
+        }
+      }
       lastNoon = solarData.solarNoon
         ? solarData.solarNoon
         : new Date(
@@ -84,8 +95,8 @@
       if (new Date() < solarData.solarNoon) {
         solarData = suncalc.getTimes(
           new Date(Date.now() - 24 * 60 * 60 * 1000),
-          e.detail.coords.latitude,
-          e.detail.coords.longitude
+          coords.lat,
+          coords.long
         )
       }
       sunrise = solarData.sunrise
@@ -114,10 +125,10 @@
       time360 = (secondsSinceLastNoon / 86400) * 359
 
       time360deg = time360 - 90 + "deg"
-      sunrise360 = ((sunrise.getTime() % 86400) / 86400) * 359 + 90
-      sunrise360deg = sunrise360 + "deg"
-      sunset360 = ((sunset.getTime() % 86400) / 86400) * 359 + 90
-      sunset360deg = sunset360 + "deg"
+      sunrise360 = (((sunrise.getTime() / 1000) % 86400) / 86400) * 359
+      sunrise360deg = sunrise360.toFixed(0) + "deg"
+      sunset360 = (((sunset.getTime() / 1000) % 86400) / 86400) * 359
+      sunset360deg = sunset360.toFixed(0) + "deg"
     }, 1000)
   })
 </script>
@@ -126,6 +137,8 @@
   getPosition
   on:position={(e) => {
     geoEvents = [...geoEvents, e.detail]
+    coords.lat = e.detail.coords.latitude
+    coords.long = e.detail.coords.longitude
     solarData = suncalc.getTimes(
       new Date(),
       e.detail.coords.latitude,
@@ -165,6 +178,13 @@
   </div>
   <div class="flex items-center justify-center text-3xl">
     Stardate: {currentStardate}
+  </div>
+  <div class=" items-center justify-center text-3xl">
+    <p>Sunrise: {sunrise360deg}</p>
+    <p>Sunset: {sunset360deg}</p>
+    <p>Sunrise: {(sunrise.getTime() / 1000) % 86400}</p>
+    <p>Sunset: {(sunset.getTime() / 1000) % 86400}</p>
+    <p>coords: {JSON.stringify(coords)}</p>
   </div>
   <div class="flex bg-black min-h-screen text-white">
     <div
@@ -211,10 +231,9 @@
   .daydonut {
     background: radial-gradient(black 40%, transparent 41%),
       conic-gradient(
-        #2196f3 0% 1%,
-        #2196f3 1% 20%,
-        #ee6205 20% 70%,
-        #2196f3 60% 100%
+        #ee6205 0deg 90deg,
+        #2196f3 90deg 270deg,
+        #ee6205 270deg 360deg
       );
     margin: 10px;
     display: inline-block;
