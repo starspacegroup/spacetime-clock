@@ -164,28 +164,6 @@
   class="flex-col bg-black text-white"
   style="--time360deg: {time360deg}; --date360deg: {date360deg}; --date100prog: {date100prog}; --sunrise360deg: {sunrise360deg}; --sunset360deg: {sunset360deg};"
 >
-  <div class="flex items-center justify-center text-3xl p-8">
-    {datetime.getUTCFullYear() +
-      "/" +
-      (datetime.getUTCMonth() + 1).toString().padStart(2, "0") +
-      "/" +
-      datetime.getUTCDate().toString().padStart(2, "0")}
-    {datetime.getUTCHours().toString().padStart(2, "0")}:{datetime
-      .getUTCMinutes()
-      .toString()
-      .padStart(2, "0")}:{datetime.getUTCSeconds().toString().padStart(2, "0")}
-    UTC/GMT
-  </div>
-  <div class="flex items-center justify-center text-3xl">
-    Stardate: {currentStardate}
-  </div>
-  <div class=" items-center justify-center text-3xl">
-    <p>Sunrise: {sunrise360deg}</p>
-    <p>Sunset: {sunset360deg}</p>
-    <p>Sunrise: {(sunrise.getTime() / 1000) % 86400}</p>
-    <p>Sunset: {(sunset.getTime() / 1000) % 86400}</p>
-    <p>coords: {JSON.stringify(coords)}</p>
-  </div>
   <div class="flex bg-black min-h-screen text-white">
     <div
       class="m-auto md:flex space-x-0 md:space-x-8 space-y-8 md:space-y-0 items-center justify-center text-center"
@@ -213,6 +191,29 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <div class="flex items-center justify-center text-3xl p-8">
+    {datetime.getUTCFullYear() +
+      "/" +
+      (datetime.getUTCMonth() + 1).toString().padStart(2, "0") +
+      "/" +
+      datetime.getUTCDate().toString().padStart(2, "0")}
+    {datetime.getUTCHours().toString().padStart(2, "0")}:{datetime
+      .getUTCMinutes()
+      .toString()
+      .padStart(2, "0")}:{datetime.getUTCSeconds().toString().padStart(2, "0")}
+    UTC/GMT
+  </div>
+  <div class="flex items-center justify-center text-3xl">
+    Stardate: {currentStardate}
+  </div>
+  <div class="items-center justify-center text-3xl">
+    <p>Sunrise: {sunrise360deg}</p>
+    <p>Sunset: {sunset360deg}</p>
+    <p>Sunrise: {(sunrise.getTime() / 1000) % 86400}</p>
+    <p>Sunset: {(sunset.getTime() / 1000) % 86400}</p>
+    <p>coords: {JSON.stringify(coords)}</p>
   </div>
 </div>
 <footer class="text-center bg-black text-white p-8">
