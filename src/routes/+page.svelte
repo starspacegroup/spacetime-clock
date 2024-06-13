@@ -133,6 +133,19 @@
       sunset360deg = sunset360.toFixed(0) + "deg"
     }, 1000)
   })
+
+  function toggleHelp() {
+    // toggle visibility of .help-overlay:
+    let overlay = document.getElementsByClassName(
+      "help-overlay"
+    ) as HTMLCollectionOf<HTMLElement>
+    if (overlay[0].style.visibility == "visible") {
+      overlay[0].style.visibility = "hidden"
+    } else {
+      overlay[0].style.visibility = "visible"
+    }
+    // doc1ument.getElementsByClassName('help-overlay')
+  }
 </script>
 
 <Geolocation
@@ -166,7 +179,30 @@
   class="flex-col bg-black text-white"
   style="--time360deg: {time360deg}; --date360deg: {date360deg}; --date100prog: {date100prog}; --sunrise360deg: {sunrise360deg}; --sunset360deg: {sunset360deg};"
 >
-  <div class="flex bg-black min-h-screen text-white">
+  <div class="flex bg-black min-h-screen text-white relative">
+    <div class="help-button flex absolute left-10 top-10 z-20">
+      <button
+        on:click={toggleHelp}
+        class="text-2xl font-bold bg-slate-500 p-3 px-5 bg-opacity-20 rounded-md"
+        >?</button
+      >
+    </div>
+    <div
+      class="help-overlay m-auto md:flex space-x-0 md:space-x-8 space-y-8 md:space-y-0 items-center justify-center text-center flex h-screen w-screen z-10 absolute invisible -ml-3"
+    >
+      <div class="daydonut-help h-60 w-60 md:h-96 md:w-96 rounded-full">
+        <div class="flex items-center justify-center h-full text-3xl font-thin">
+          <div class="mt-24 text-red-600">Date 360</div>
+        </div>
+      </div>
+      <div class="timedonut-help h-60 w-60 md:h-96 md:w-96 rounded-full">
+        <div
+          class="flex items-center h-full w-full justify-center text-3xl font-thin timeindicator"
+        >
+          <div class="mt-24 text-red-600">Time 360</div>
+        </div>
+      </div>
+    </div>
     <div
       class="m-auto md:flex space-x-0 md:space-x-8 space-y-8 md:space-y-0 items-center justify-center text-center"
     >
@@ -189,7 +225,7 @@
         <div
           class="flex items-center h-full w-full justify-center text-6xl timeindicator"
         >
-          <div>{time360.toFixed()}</div>
+          <div>{time360.toFixed(2)}</div>
         </div>
       </div>
     </div>
