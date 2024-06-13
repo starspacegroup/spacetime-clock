@@ -126,7 +126,7 @@
 
       time360deg = time360 - 90 + "deg"
       sunrise360 =
-        ((((sunrise.getTime() / 1000) % 86400) / 86400) * 359 + 90) % 360
+        ((((sunrise.getTime() / 1000) % 86400) / 86400) * 359 + 45) % 360
       sunrise360deg = sunrise360.toFixed(0) + "deg"
       sunset360 =
         ((((sunset.getTime() / 1000) % 86400) / 86400) * 359 + 90) % 360
