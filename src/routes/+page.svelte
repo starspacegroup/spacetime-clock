@@ -131,7 +131,7 @@
       sunset360 =
         ((((sunset.getTime() / 1000) % 86400) / 86400) * 359 + 90) % 360
       sunset360deg = sunset360.toFixed(0) + "deg"
-    }, 1000)
+    }, 9)
   })
 
   function toggleHelp() {
