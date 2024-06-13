@@ -180,7 +180,7 @@
   style="--time360deg: {time360deg}; --date360deg: {date360deg}; --date100prog: {date100prog}; --sunrise360deg: {sunrise360deg}; --sunset360deg: {sunset360deg};"
 >
   <div class="flex bg-black min-h-screen text-white relative">
-    <div class="help-button flex absolute left-10 top-10 z-20">
+    <div class="help-button flex absolute left-10 top-10 z-20 invisible">
       <button
         on:click={toggleHelp}
         class="text-2xl font-bold bg-slate-500 p-3 px-5 bg-opacity-20 rounded-md"
