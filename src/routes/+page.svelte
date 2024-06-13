@@ -223,7 +223,7 @@
         </svg>
 
         <div
-          class="flex items-center h-full w-full justify-center text-6xl timeindicator"
+          class="flex items-center h-full w-full justify-center text-3xl md:text-6xl timeindicator"
         >
           <div>{time360.toFixed(2)}</div>
         </div>
@@ -246,12 +246,14 @@
   <div class="flex items-center justify-center text-3xl">
     Stardate: {currentStardate}
   </div>
-  <div class="items-center justify-center text-3xl">
+  <div
+    class="items-center justify-center text-xl md:text-3xl max-w-screen-md overflow-hidden"
+  >
     <p>Sunrise: {sunrise360deg}</p>
     <p>Sunset: {sunset360deg}</p>
     <p>Sunrise: {(sunrise.getTime() / 1000) % 86400}</p>
     <p>Sunset: {(sunset.getTime() / 1000) % 86400}</p>
-    <p>coords: {JSON.stringify(coords)}</p>
+    <p class="text-wrap">coords: {JSON.stringify(coords)}</p>
   </div>
 </div>
 <footer class="text-center bg-black text-white p-8">
