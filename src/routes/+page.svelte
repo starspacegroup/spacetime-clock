@@ -178,10 +178,10 @@
 />
 
 <div
-  class="flex-col bg-black text-white"
+  class="flex-col"
   style="--time360deg: {time360deg}; --date360deg: {date360deg}; --date100prog: {date100prog}; --sunrise360deg: {sunrise360deg}; --sunset360deg: {sunset360deg};"
 >
-  <div class="flex bg-black min-h-screen text-white relative">
+  <div class="flex min-h-screen relative">
     <div class="help-button flex absolute left-10 top-10 z-20 invisible">
       <button
         on:click={toggleHelp}
@@ -258,7 +258,7 @@
     <p class="text-wrap">coords: {JSON.stringify(coords)}</p>
   </div>
 </div>
-<footer class="text-center bg-black text-white p-8">
+<footer class="text-center p-8">
   <a href="https://github.com/starspacegroup/spacetime-clock"
     >Open Source on GitHub</a
   >
@@ -272,11 +272,11 @@
 
 <style>
   .daydonut {
-    background: radial-gradient(black 40%, transparent 41%),
+    background: radial-gradient(theme("colors.background") 40%, transparent 41%),
       conic-gradient(
-        #ee6205 0deg 90deg,
-        #2196f3 90deg 270deg,
-        #ee6205 270deg 360deg
+        theme("colors.summer") 0deg 90deg,
+        theme("colors.winter") 90deg 270deg,
+        theme("colors.summer") 270deg 360deg
       );
     margin: 10px;
     display: inline-block;
@@ -303,7 +303,7 @@
   }
 
   .circular-progress-date circle.bg {
-    stroke: #000000;
+    stroke: theme("colors.background");
   }
 
   .circular-progress-date circle.fg {
@@ -311,7 +311,7 @@
     transform-origin: var(--half-size) var(--half-size);
     stroke-dasharray: var(--dash) calc(var(--circumference) - var(--dash));
     transition: stroke-dasharray 0.3s linear 0s;
-    stroke: #005a0b;
+    stroke: theme("colors.year-progress");
   }
 
   @property --progress {
@@ -330,11 +330,11 @@
   }
 
   .timedonut {
-    background: radial-gradient(black 40%, transparent 41%),
+    background: radial-gradient(theme("colors.background") 40%, transparent 41%),
       conic-gradient(
-        orange 0% var(--sunset360deg),
-        #151301 var(--sunset360deg) var(--sunrise360deg),
-        orange var(--sunrise360deg) 100%
+        theme("colors.daytime") 0% var(--sunset360deg),
+        theme("colors.nighttime") var(--sunset360deg) var(--sunrise360deg),
+        theme("colors.daytime") var(--sunrise360deg) 100%
       );
     margin: 10px;
     display: inline-block;
@@ -362,7 +362,7 @@
   }
 
   .circular-progress-time circle.bg {
-    stroke: #000000;
+    stroke: theme("colors.background");
   }
 
   .circular-progress-time circle.fg {
@@ -370,7 +370,7 @@
     transform-origin: var(--half-size) var(--half-size);
     stroke-dasharray: var(--dash) calc(var(--circumference) - var(--dash));
     transition: stroke-dasharray 0.3s linear 0s;
-    stroke: #ff00d4;
+    stroke: theme("colors.sun");
   }
 
   @property --progress {

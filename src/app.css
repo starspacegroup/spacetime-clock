@@ -1,3 +1,30 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    --foreground: 34deg, 73%, 10%;
+    --background: 264deg, 100%, 90%;
+    --primary: 265deg, 95%, 57%;
+    --secondary: 34deg, 96%, 52%;
+    --accent: 135deg, 73%, 49%;
+		--link-blue: 220deg, 80%, 50%;
+
+    --daytime: 39deg, 100%, 50%;
+    --nighttime: 51deg, 91%, 4%;
+    --sun: 310deg, 100%, 50%;
+    --summer: 24deg, 96%, 48%;
+    --winter: 207deg, 90%, 54%;
+    --year-progress: 127deg, 100%, 18%;
+  }
+	html[data-theme="dark"],
+	html.dark {
+		--foreground: 34deg, 73%, 90%;
+    --background: 264deg, 100%, 1%;
+    --primary: 265deg, 95%, 43%;
+    --secondary: 34deg, 96%, 48%;
+    --accent: 135deg, 73%, 51%;
+		--link-blue: 220deg, 80%, 50%;
+  }
+}
