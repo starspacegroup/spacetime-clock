@@ -47,7 +47,7 @@
 
   let secondsSinceLastNoon: number =
     datetime.getTime() - lastNoon.getTime() / 1000
-  let solarData = {}
+  let solarData: suncalc.GetTimesResult
   let currentStardate = stardate(datetime)
 
   var dayOfYear =
@@ -152,6 +152,8 @@
   getPosition
   on:position={(e) => {
     geoEvents = [...geoEvents, e.detail]
+    if (!e.detail) return;
+    if (!e.detail.coords) return;
     coords.lat = e.detail.coords.latitude
     coords.long = e.detail.coords.longitude
     solarData = suncalc.getTimes(
