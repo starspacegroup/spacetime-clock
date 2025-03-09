@@ -4,7 +4,4 @@ import basicSsl from '@vitejs/plugin-basic-ssl';
 
 export default defineConfig({
 	plugins: [sveltekit(), basicSsl()],
-	server: {
-		host: 'spacetime-clock.localhost'
-	}
 });
