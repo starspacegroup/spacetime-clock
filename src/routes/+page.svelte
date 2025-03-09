@@ -289,7 +289,7 @@
     --stroke-width: 20px;
     --radius: calc((var(--size) - var(--stroke-width)) / 2);
     --circumference: calc(var(--radius) * pi * 2);
-    --dash: calc((var(--progress) * var(--circumference)) / 100);
+    --dash: calc((var(--progress-date) * var(--circumference)) / 100);
     animation: progress-animation-date 0.23s linear 0s 1 forwards;
   }
 
@@ -314,7 +314,7 @@
     stroke: theme("colors.year-progress");
   }
 
-  @property --progress {
+  @property --progress-date {
     syntax: "<number>";
     inherits: false;
     initial-value: 0;
@@ -322,10 +322,10 @@
 
   @keyframes progress-animation-date {
     from {
-      --progress: 0;
+      --progress-date: 0;
     }
     to {
-      --progress: var(--date100prog);
+      --progress-date: var(--date100prog);
     }
   }
 
@@ -348,7 +348,7 @@
     --radius: calc((var(--size) - var(--stroke-width)) / 2);
     /* --circumference: 0.5; */
     --circumference: calc(var(--radius) * pi * 2);
-    --dash: calc((var(--progress) * var(--circumference)) / 100);
+    --dash: calc((var(--progress-time) * var(--circumference)) / 100);
     animation: progress-animation-time 0.32s linear 0s 1 forwards;
   }
 
@@ -373,7 +373,7 @@
     stroke: theme("colors.sun");
   }
 
-  @property --progress {
+  @property --progress-time {
     syntax: "<number>";
     inherits: false;
     initial-value: 0;
@@ -381,10 +381,10 @@
 
   @keyframes progress-animation-time {
     from {
-      --progress: 0;
+      --progress-time: 0;
     }
     to {
-      --progress: var(--time100);
+      --progress-time: var(--time100);
     }
   }
 </style>
