@@ -30,7 +30,6 @@
     --accent: 135deg, 73%, 51%;
 		--link-blue: 220deg, 80%, 50%;
     scrollbar-color: theme("colors.foreground/25%") theme("colors.background/95%");
-
   }
 }
 
