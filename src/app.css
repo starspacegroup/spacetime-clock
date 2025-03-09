@@ -17,6 +17,9 @@
     --summer: 24deg, 96%, 48%;
     --winter: 207deg, 90%, 54%;
     --year-progress: 127deg, 100%, 18%;
+
+    scroll-behavior: smooth;
+    scrollbar-color: theme("colors.background/25%") theme("colors.background/5%");  
   }
 	html[data-theme="dark"],
 	html.dark {
@@ -26,5 +29,22 @@
     --secondary: 34deg, 96%, 48%;
     --accent: 135deg, 73%, 51%;
 		--link-blue: 220deg, 80%, 50%;
+    scrollbar-color: theme("colors.foreground/25%") theme("colors.background/95%");
+
   }
+}
+
+::selection {
+  background: theme("colors.foreground/25%");
+	color: theme("colors.foreground") !important;
+	text-shadow: none !important;
+  filter: none !important;
+  -webkit-filter: none !important;
+  shadow: none !important;
+  outline: none !important;
+}
+
+input::selection {
+  background: theme("colors.accent");
+  color: theme("colors.black");
 }
