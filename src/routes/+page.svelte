@@ -63,6 +63,7 @@
   let date100prog = (dayOfYear / 365.25) * 100
   let time360 = (datetime.getMinutes() / 24 / 60) * 359
   let time360deg = time360 + "deg"
+  let time100 = 0
   let sunrise360 = 250
   let sunrise360deg = sunrise360 + "deg"
   let sunset360 = 120
@@ -123,6 +124,7 @@
         (datetime.getTime() - lastNoon.getTime()) / 1000
       )
       time360 = (secondsSinceLastNoon / 86400) * 359
+      time100 = (secondsSinceLastNoon / 86400) * 100
 
       time360deg = time360 - 90 + "deg"
       sunrise360 =
@@ -179,7 +181,7 @@
 
 <div
   class="flex-col"
-  style="--time360deg: {time360deg}; --date360deg: {date360deg}; --date100prog: {date100prog}; --sunrise360deg: {sunrise360deg}; --sunset360deg: {sunset360deg};"
+  style="--time360deg: {time360deg}; --date360deg: {date360deg}; --date100prog: {date100prog}; --time100: {time100}; --sunrise360deg: {sunrise360deg}; --sunset360deg: {sunset360deg};"
 >
   <div class="flex min-h-screen relative">
     <div class="help-button flex absolute left-10 top-10 z-20 invisible">
@@ -288,9 +290,8 @@
     --half-size: calc(var(--size) / 2);
     --stroke-width: 20px;
     --radius: calc((var(--size) - var(--stroke-width)) / 2);
-    --circumference: calc(var(--radius) * pi * 2);
-    --dash: calc((var(--progress-date) * var(--circumference)) / 100);
-    animation: progress-animation-date 0.23s linear 0s 1 forwards;
+    --circumference: calc(var(--radius) * 3.14159265359 * 2);
+    --dash: calc((var(--date100prog) * var(--circumference)) / 100);
   }
 
   .circular-progress-date circle {
@@ -314,21 +315,6 @@
     stroke: theme("colors.year-progress");
   }
 
-  @property --progress-date {
-    syntax: "<number>";
-    inherits: false;
-    initial-value: 0;
-  }
-
-  @keyframes progress-animation-date {
-    from {
-      --progress-date: 0;
-    }
-    to {
-      --progress-date: var(--date100prog);
-    }
-  }
-
   .timedonut {
     background: radial-gradient(theme("colors.background") 40%, transparent 41%),
       conic-gradient(
@@ -346,10 +332,8 @@
     --half-size: calc(var(--size) / 2);
     --stroke-width: 33px;
     --radius: calc((var(--size) - var(--stroke-width)) / 2);
-    /* --circumference: 0.5; */
-    --circumference: calc(var(--radius) * pi * 2);
-    --dash: calc((var(--progress-time) * var(--circumference)) / 100);
-    animation: progress-animation-time 0.32s linear 0s 1 forwards;
+    --circumference: calc(var(--radius) * 3.14159265359 * 2);
+    --dash: calc((var(--time100) * var(--circumference)) / 100);
   }
 
   .circular-progress-time circle {
@@ -371,20 +355,5 @@
     stroke-dasharray: var(--dash) calc(var(--circumference) - var(--dash));
     transition: stroke-dasharray 0.3s linear 0s;
     stroke: theme("colors.sun");
-  }
-
-  @property --progress-time {
-    syntax: "<number>";
-    inherits: false;
-    initial-value: 0;
-  }
-
-  @keyframes progress-animation-time {
-    from {
-      --progress-time: 0;
-    }
-    to {
-      --progress-time: var(--time100);
-    }
   }
 </style>
