@@ -67,7 +67,7 @@
   let date360 = (dayOfYear / 365.25) * 359
   let date360deg = date360 + "deg"
   let date100prog = (dayOfYear / 365.25) * 100
-  let time360 = (datetime.getMinutes() / 24 / 60) * 359
+  let time360 = (secondsSinceLastNoon / 86400) * 359
   let time360deg = time360 + "deg"
   let sunrise360 = 250
   let sunrise360deg = sunrise360 + "deg"
@@ -382,15 +382,12 @@
     position: absolute;
   }
 
-  .circular-progress-time circle {
+  .circular-progress-time circle.bg {
     cx: 50%;
     cy: 50%;
     r: calc((100% - 33px) / 2);
     stroke-width: 33px;
     fill: none;
-  }
-
-  .circular-progress-time circle.bg {
     stroke: theme("colors.background");
   }
 
