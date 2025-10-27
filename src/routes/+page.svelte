@@ -4,7 +4,14 @@
   import stardate from "stardate-converter"
   import suncalc from "suncalc"
   import getHemisphere from "$lib/getHemisphere"
+  import gsap from "gsap"
+  
   let datetime: Date = new Date()
+  
+  // SVG circle references for GSAP animations
+  let dateProgressCircle: SVGCircleElement
+  let sunMarker: SVGCircleElement
+  let timeRingElement: HTMLDivElement // Reference to time ring container
 
   let juneSolstice = new Date(datetime.getFullYear(), 5, 21)
   let decemberSolstice = new Date(datetime.getFullYear(), 11, 21)
@@ -20,6 +27,8 @@
 
   let geoEvents: any = []
   let coords = { lat: 0, long: 0 }
+  let hasLocation = false // Track if we have location data
+  let hasAnimatedIn = false // Track if we've done the initial animation
   let lastNoon: Date = new Date(
     datetime.getFullYear(),
     datetime.getMonth(),
@@ -61,7 +70,7 @@
   let date360 = (dayOfYear / 365.25) * 359
   let date360deg = date360 + "deg"
   let date100prog = (dayOfYear / 365.25) * 100
-  let time360 = (datetime.getMinutes() / 24 / 60) * 359
+  let time360 = 0 // Default to 0 until we have location
   let time360deg = time360 + "deg"
   let sunrise360 = 250
   let sunrise360deg = sunrise360 + "deg"
@@ -69,6 +78,59 @@
   let sunset360deg = sunset360 + "deg"
 
   onMount(() => {
+    // Calculate SVG circle properties for GSAP animations
+    const updateCircleProgress = () => {
+      if (!dateProgressCircle || !sunMarker) return
+      
+      // Get the SVG parent elements to calculate actual sizes
+      const dateSvg = dateProgressCircle.closest('svg')
+      const timeSvg = sunMarker.closest('svg')
+      
+      if (!dateSvg || !timeSvg) return
+      
+      // Calculate circle properties based on SVG viewBox or clientWidth
+      const dateSize = dateSvg.clientWidth || 384 // fallback to md size
+      const timeSize = timeSvg.clientWidth || 384
+      
+      const dateRadius = (dateSize - 20) / 2 // stroke-width is 20px
+      const timeRadius = (timeSize - 33) / 2 // stroke-width is 33px
+      
+      const dateCircumference = dateRadius * 2 * Math.PI
+      
+      // Animate date progress circle
+      const dateProgress = (dayOfYear / 365.25) * 100
+      const dateDash = (dateProgress * dateCircumference) / 100
+      gsap.to(dateProgressCircle, {
+        attr: {
+          "stroke-dasharray": `${dateDash} ${dateCircumference - dateDash}`
+        },
+        duration: 0.3,
+        ease: "linear"
+      })
+      
+      // Animate sun marker position
+      const angle = (time360 - 90) * (Math.PI / 180) // Convert to radians, offset by -90 for top
+      const markerRadius = timeRadius + (33 / 2) // Position on the middle of the stroke width
+      const centerX = timeSize / 2
+      const centerY = timeSize / 2
+      const markerX = centerX + markerRadius * Math.cos(angle)
+      const markerY = centerY + markerRadius * Math.sin(angle)
+      
+      gsap.to(sunMarker, {
+        attr: {
+          "cx": markerX,
+          "cy": markerY
+        },
+        duration: 0.3,
+        ease: "linear"
+      })
+    }
+    
+    // Wait for elements to be mounted and sized
+    setTimeout(() => {
+      updateCircleProgress()
+    }, 100)
+    
     let refresher = setInterval(function () {
       datetime = new Date()
       date360 = (dayOfYear / 365.25) * 359
@@ -119,10 +181,31 @@
             0,
             0
           )
-      secondsSinceLastNoon = Math.abs(
-        (datetime.getTime() - lastNoon.getTime()) / 1000
-      )
-      time360 = (secondsSinceLastNoon / 86400) * 359
+      
+      // Only calculate time360 if we have location
+      if (hasLocation) {
+        secondsSinceLastNoon = Math.abs(
+          (datetime.getTime() - lastNoon.getTime()) / 1000
+        )
+        const targetTime360 = (secondsSinceLastNoon / 86400) * 359
+        
+        // Animate from 0 to target on first acquisition
+        if (!hasAnimatedIn) {
+          hasAnimatedIn = true
+          gsap.to({ value: 0 }, {
+            value: targetTime360,
+            duration: 1.5,
+            ease: "power2.out",
+            onUpdate: function() {
+              time360 = this.targets()[0].value
+            }
+          })
+        } else {
+          time360 = targetTime360
+        }
+      } else {
+        time360 = 0 // Keep at 0 until we have location
+      }
 
       time360deg = time360 - 90 + "deg"
       sunrise360 =
@@ -131,6 +214,9 @@
       sunset360 =
         ((((sunset.getTime() / 1000) % 86400) / 86400) * 359 + 90) % 360
       sunset360deg = sunset360.toFixed(0) + "deg"
+      
+      // Update GSAP animations
+      updateCircleProgress()
     }, 9)
   })
 
@@ -154,6 +240,17 @@
     geoEvents = [...geoEvents, e.detail]
     if (!e.detail) return;
     if (!e.detail.coords) return;
+    
+    // Animate time ring fade in when location is obtained
+    if (!hasLocation && timeRingElement) {
+      gsap.to(timeRingElement, {
+        opacity: 1,
+        duration: 1,
+        ease: "power2.out"
+      })
+    }
+    
+    hasLocation = true // Mark that we have location
     coords.lat = e.detail.coords.latitude
     coords.long = e.detail.coords.longitude
     solarData = suncalc.getTimes(
@@ -211,17 +308,17 @@
       <div class="daydonut h-60 w-60 md:h-96 md:w-96 rounded-full">
         <svg class="circular-progress-date h-60 w-60 md:h-96 md:w-96">
           <circle class="bg"></circle>
-          <circle class="fg"></circle>
+          <circle class="fg" bind:this={dateProgressCircle}></circle>
         </svg>
 
         <div class="flex items-center justify-center h-full text-6xl">
           {date360.toFixed(0)}
         </div>
       </div>
-      <div class="timedonut h-60 w-60 md:h-96 md:w-96 rounded-full">
+      <div class="timedonut h-60 w-60 md:h-96 md:w-96 rounded-full" bind:this={timeRingElement} style="opacity: 0;">
         <svg class="circular-progress-time h-60 w-60 md:h-96 md:w-96">
           <circle class="bg"></circle>
-          <circle class="fg"></circle>
+          <circle class="sun-marker" bind:this={sunMarker}></circle>
         </svg>
 
         <div
@@ -248,6 +345,11 @@
   <div class="flex items-center justify-center text-3xl">
     Stardate: {currentStardate}
   </div>
+  {#if !hasLocation}
+    <div class="flex items-center justify-center text-xl md:text-2xl text-yellow-400 mt-4">
+      ⚠️ Waiting for location... Time ring at 0° (midnight)
+    </div>
+  {/if}
   <div
     class="items-center justify-center text-xl md:text-3xl max-w-screen-md overflow-hidden"
   >
@@ -284,20 +386,13 @@
   }
   .circular-progress-date {
     position: absolute;
-    --size: 100%;
-    --half-size: calc(var(--size) / 2);
-    --stroke-width: 20px;
-    --radius: calc((var(--size) - var(--stroke-width)) / 2);
-    --circumference: calc(var(--radius) * pi * 2);
-    --dash: calc((var(--progress-date) * var(--circumference)) / 100);
-    animation: progress-animation-date 0.23s linear 0s 1 forwards;
   }
 
   .circular-progress-date circle {
-    cx: var(--half-size);
-    cy: var(--half-size);
-    r: var(--radius);
-    stroke-width: var(--stroke-width);
+    cx: 50%;
+    cy: 50%;
+    r: calc((100% - 20px) / 2);
+    stroke-width: 20px;
     fill: none;
     stroke-linecap: round;
   }
@@ -308,25 +403,8 @@
 
   .circular-progress-date circle.fg {
     transform: rotate(-90deg);
-    transform-origin: var(--half-size) var(--half-size);
-    stroke-dasharray: var(--dash) calc(var(--circumference) - var(--dash));
-    transition: stroke-dasharray 0.3s linear 0s;
+    transform-origin: 50% 50%;
     stroke: theme("colors.year-progress");
-  }
-
-  @property --progress-date {
-    syntax: "<number>";
-    inherits: false;
-    initial-value: 0;
-  }
-
-  @keyframes progress-animation-date {
-    from {
-      --progress-date: 0;
-    }
-    to {
-      --progress-date: var(--date100prog);
-    }
   }
 
   .timedonut {
@@ -342,49 +420,20 @@
   }
   .circular-progress-time {
     position: absolute;
-    --size: 100%;
-    --half-size: calc(var(--size) / 2);
-    --stroke-width: 33px;
-    --radius: calc((var(--size) - var(--stroke-width)) / 2);
-    /* --circumference: 0.5; */
-    --circumference: calc(var(--radius) * pi * 2);
-    --dash: calc((var(--progress-time) * var(--circumference)) / 100);
-    animation: progress-animation-time 0.32s linear 0s 1 forwards;
-  }
-
-  .circular-progress-time circle {
-    cx: var(--half-size);
-    cy: var(--half-size);
-    r: var(--radius);
-    stroke-width: var(--stroke-width);
-    fill: none;
-    stroke-linecap: round;
   }
 
   .circular-progress-time circle.bg {
+    cx: 50%;
+    cy: 50%;
+    r: calc((100% - 33px) / 2);
+    stroke-width: 33px;
+    fill: none;
     stroke: theme("colors.background");
   }
 
-  .circular-progress-time circle.fg {
-    transform: rotate(var(--time360deg));
-    transform-origin: var(--half-size) var(--half-size);
-    stroke-dasharray: var(--dash) calc(var(--circumference) - var(--dash));
-    transition: stroke-dasharray 0.3s linear 0s;
-    stroke: theme("colors.sun");
-  }
-
-  @property --progress-time {
-    syntax: "<number>";
-    inherits: false;
-    initial-value: 0;
-  }
-
-  @keyframes progress-animation-time {
-    from {
-      --progress-time: 0;
-    }
-    to {
-      --progress-time: var(--time100);
-    }
+  .circular-progress-time circle.sun-marker {
+    r: 16px;
+    fill: theme("colors.sun");
+    stroke: none;
   }
 </style>
