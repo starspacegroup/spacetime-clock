@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GSAP Ring Animation Test</title>
+    <style>
+        :root {
+            --foreground: 34deg, 73%, 90%;
+            --background: 264deg, 100%, 1%;
+            --daytime: 39deg, 100%, 50%;
+            --nighttime: 51deg, 91%, 4%;
+            --sun: 310deg, 100%, 50%;
+            --summer: 24deg, 96%, 48%;
+            --winter: 207deg, 90%, 54%;
+            --year-progress: 127deg, 100%, 18%;
+        }
+        
+        body {
+            background: hsla(var(--background));
+            color: hsla(var(--foreground));
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        
+        .title {
+            font-size: 32px;
+            margin-bottom: 32px;
+            color: hsla(var(--foreground));
+        }
+        
+        .container {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+        
+        .daydonut {
+            background: radial-gradient(hsla(var(--background)) 40%, transparent 41%),
+                conic-gradient(
+                    hsla(var(--summer)) 0deg 90deg,
+                    hsla(var(--winter)) 90deg 270deg,
+                    hsla(var(--summer)) 270deg 360deg
+                );
+            margin: 10px;
+            display: inline-block;
+            border-radius: 50%;
+            width: 384px;
+            height: 384px;
+            position: relative;
+        }
+        
+        .timedonut {
+            background: radial-gradient(hsla(var(--background)) 40%, transparent 41%),
+                conic-gradient(
+                    hsla(var(--daytime)) 0% 270deg,
+                    hsla(var(--nighttime)) 270deg 90deg,
+                    hsla(var(--daytime)) 90deg 100%
+                );
+            margin: 10px;
+            display: inline-block;
+            border-radius: 50%;
+            width: 384px;
+            height: 384px;
+            position: relative;
+        }
+        
+        .circular-progress-date {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .circular-progress-date circle {
+            cx: 50%;
+            cy: 50%;
+            r: calc((100% - 20px) / 2);
+            stroke-width: 20px;
+            fill: none;
+            stroke-linecap: round;
+        }
+        
+        .circular-progress-date circle.bg {
+            stroke: hsla(var(--background));
+        }
+        
+        .circular-progress-date circle.fg {
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+            stroke: hsla(var(--year-progress));
+        }
+        
+        .circular-progress-time {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .circular-progress-time circle {
+            cx: 50%;
+            cy: 50%;
+            r: calc((100% - 33px) / 2);
+            stroke-width: 33px;
+            fill: none;
+            stroke-linecap: round;
+        }
+        
+        .circular-progress-time circle.bg {
+            stroke: hsla(var(--background));
+        }
+        
+        .circular-progress-time circle.fg {
+            stroke: hsla(var(--sun));
+        }
+        
+        .donut-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: 100;
+        }
+        
+        .info {
+            margin-top: 24px;
+            font-size: 18px;
+            color: hsla(var(--foreground));
+            max-width: 800px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="title">GSAP-Powered Spacetime Clock</div>
+    <div class="container">
+        <div class="daydonut">
+            <svg class="circular-progress-date">
+                <circle class="bg"></circle>
+                <circle class="fg" id="dateCircle"></circle>
+            </svg>
+            <div class="donut-content" id="dateValue">180</div>
+        </div>
+        
+        <div class="timedonut">
+            <svg class="circular-progress-time">
+                <circle class="bg"></circle>
+                <circle class="fg" id="timeCircle"></circle>
+            </svg>
+            <div class="donut-content" id="timeValue">90.00</div>
+        </div>
+    </div>
+    <div class="info">
+        ✅ GSAP animations | ✅ iOS compatible | ✅ Hardware accelerated | ✅ Rounded edges
+    </div>
+    
+    <script src="../node_modules/gsap/dist/gsap.min.js"></script>
+    <script>
+        const dateCircle = document.getElementById('dateCircle');
+        const timeCircle = document.getElementById('timeCircle');
+        const dateValue = document.getElementById('dateValue');
+        const timeValue = document.getElementById('timeValue');
+        
+        // Calculate circle properties
+        const dateSvg = dateCircle.closest('svg');
+        const timeSvg = timeCircle.closest('svg');
+        
+        const dateSize = dateSvg.clientWidth || 384;
+        const timeSize = timeSvg.clientWidth || 384;
+        
+        const dateRadius = (dateSize - 20) / 2;
+        const timeRadius = (timeSize - 33) / 2;
+        
+        const dateCircumference = dateRadius * 2 * Math.PI;
+        const timeCircumference = timeRadius * 2 * Math.PI;
+        
+        let dateProgress = 50; // 50% through the year
+        let timeProgress = 25; // 25% through the day
+        
+        function updateCircles() {
+            // Update date circle
+            const dateDash = (dateProgress * dateCircumference) / 100;
+            gsap.to(dateCircle, {
+                attr: { 
+                    "stroke-dasharray": `${dateDash} ${dateCircumference - dateDash}`
+                },
+                duration: 0.3,
+                ease: "linear"
+            });
+            
+            // Update time circle
+            const timeDash = (timeProgress * timeCircumference) / 100;
+            const rotation = (timeProgress / 100) * 360 - 90;
+            gsap.to(timeCircle, {
+                attr: { 
+                    "stroke-dasharray": `${timeDash} ${timeCircumference - timeDash}`
+                },
+                rotation: rotation,
+                transformOrigin: "50% 50%",
+                duration: 0.3,
+                ease: "linear"
+            });
+            
+            // Update text values
+            dateValue.textContent = Math.floor((dateProgress / 100) * 359);
+            timeValue.textContent = ((timeProgress / 100) * 359).toFixed(2);
+        }
+        
+        // Initial update
+        setTimeout(updateCircles, 100);
+        
+        // Animate progress
+        setInterval(() => {
+            timeProgress = (timeProgress + 0.5) % 100;
+            dateProgress = (dateProgress + 0.05) % 100;
+            updateCircles();
+        }, 50);
+    </script>
+</body>
+</html>
