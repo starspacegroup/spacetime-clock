@@ -10,7 +10,7 @@
   
   // SVG circle references for GSAP animations
   let dateProgressCircle: SVGCircleElement
-  let timeProgressCircle: SVGCircleElement
+  let sunMarker: SVGCircleElement
 
   let juneSolstice = new Date(datetime.getFullYear(), 5, 21)
   let decemberSolstice = new Date(datetime.getFullYear(), 11, 21)
@@ -77,11 +77,11 @@
   onMount(() => {
     // Calculate SVG circle properties for GSAP animations
     const updateCircleProgress = () => {
-      if (!dateProgressCircle || !timeProgressCircle) return
+      if (!dateProgressCircle || !sunMarker) return
       
       // Get the SVG parent elements to calculate actual sizes
       const dateSvg = dateProgressCircle.closest('svg')
-      const timeSvg = timeProgressCircle.closest('svg')
+      const timeSvg = sunMarker.closest('svg')
       
       if (!dateSvg || !timeSvg) return
       
@@ -93,7 +93,6 @@
       const timeRadius = (timeSize - 33) / 2 // stroke-width is 33px
       
       const dateCircumference = dateRadius * 2 * Math.PI
-      const timeCircumference = timeRadius * 2 * Math.PI
       
       // Animate date progress circle
       const dateProgress = (dayOfYear / 365.25) * 100
@@ -106,15 +105,19 @@
         ease: "linear"
       })
       
-      // Animate time progress circle
-      const timeProgress = (secondsSinceLastNoon / 86400) * 100
-      const timeDash = (timeProgress * timeCircumference) / 100
-      gsap.to(timeProgressCircle, {
+      // Animate sun marker position
+      const angle = (time360 - 90) * (Math.PI / 180) // Convert to radians, offset by -90 for top
+      const markerRadius = timeRadius + (33 / 2) // Position on the middle of the stroke width
+      const centerX = timeSize / 2
+      const centerY = timeSize / 2
+      const markerX = centerX + markerRadius * Math.cos(angle)
+      const markerY = centerY + markerRadius * Math.sin(angle)
+      
+      gsap.to(sunMarker, {
         attr: {
-          "stroke-dasharray": `${timeDash} ${timeCircumference - timeDash}`
+          "cx": markerX,
+          "cy": markerY
         },
-        rotation: time360 - 90,
-        transformOrigin: "50% 50%",
         duration: 0.3,
         ease: "linear"
       })
@@ -280,7 +283,7 @@
       <div class="timedonut h-60 w-60 md:h-96 md:w-96 rounded-full">
         <svg class="circular-progress-time h-60 w-60 md:h-96 md:w-96">
           <circle class="bg"></circle>
-          <circle class="fg" bind:this={timeProgressCircle}></circle>
+          <circle class="sun-marker" bind:this={sunMarker}></circle>
         </svg>
 
         <div
@@ -385,14 +388,15 @@
     r: calc((100% - 33px) / 2);
     stroke-width: 33px;
     fill: none;
-    stroke-linecap: round;
   }
 
   .circular-progress-time circle.bg {
     stroke: theme("colors.background");
   }
 
-  .circular-progress-time circle.fg {
-    stroke: theme("colors.sun");
+  .circular-progress-time circle.sun-marker {
+    r: 16px;
+    fill: theme("colors.sun");
+    stroke: none;
   }
 </style>
