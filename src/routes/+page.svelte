@@ -26,6 +26,7 @@
 
   let geoEvents: any = []
   let coords = { lat: 0, long: 0 }
+  let hasLocation = false // Track if we have location data
   let lastNoon: Date = new Date(
     datetime.getFullYear(),
     datetime.getMonth(),
@@ -67,7 +68,7 @@
   let date360 = (dayOfYear / 365.25) * 359
   let date360deg = date360 + "deg"
   let date100prog = (dayOfYear / 365.25) * 100
-  let time360 = (secondsSinceLastNoon / 86400) * 359
+  let time360 = 0 // Default to 0 until we have location
   let time360deg = time360 + "deg"
   let sunrise360 = 250
   let sunrise360deg = sunrise360 + "deg"
@@ -178,10 +179,16 @@
             0,
             0
           )
-      secondsSinceLastNoon = Math.abs(
-        (datetime.getTime() - lastNoon.getTime()) / 1000
-      )
-      time360 = (secondsSinceLastNoon / 86400) * 359
+      
+      // Only calculate time360 if we have location
+      if (hasLocation) {
+        secondsSinceLastNoon = Math.abs(
+          (datetime.getTime() - lastNoon.getTime()) / 1000
+        )
+        time360 = (secondsSinceLastNoon / 86400) * 359
+      } else {
+        time360 = 0 // Keep at 0 until we have location
+      }
 
       time360deg = time360 - 90 + "deg"
       sunrise360 =
@@ -216,6 +223,7 @@
     geoEvents = [...geoEvents, e.detail]
     if (!e.detail) return;
     if (!e.detail.coords) return;
+    hasLocation = true // Mark that we have location
     coords.lat = e.detail.coords.latitude
     coords.long = e.detail.coords.longitude
     solarData = suncalc.getTimes(
@@ -310,6 +318,11 @@
   <div class="flex items-center justify-center text-3xl">
     Stardate: {currentStardate}
   </div>
+  {#if !hasLocation}
+    <div class="flex items-center justify-center text-xl md:text-2xl text-yellow-400 mt-4">
+      ⚠️ Waiting for location... Time ring at 0° (midnight)
+    </div>
+  {/if}
   <div
     class="items-center justify-center text-xl md:text-3xl max-w-screen-md overflow-hidden"
   >
