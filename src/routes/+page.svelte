@@ -11,6 +11,7 @@
   // SVG circle references for GSAP animations
   let dateProgressCircle: SVGCircleElement
   let sunMarker: SVGCircleElement
+  let timeRingElement: HTMLDivElement // Reference to time ring container
 
   let juneSolstice = new Date(datetime.getFullYear(), 5, 21)
   let decemberSolstice = new Date(datetime.getFullYear(), 11, 21)
@@ -27,6 +28,7 @@
   let geoEvents: any = []
   let coords = { lat: 0, long: 0 }
   let hasLocation = false // Track if we have location data
+  let hasAnimatedIn = false // Track if we've done the initial animation
   let lastNoon: Date = new Date(
     datetime.getFullYear(),
     datetime.getMonth(),
@@ -185,7 +187,22 @@
         secondsSinceLastNoon = Math.abs(
           (datetime.getTime() - lastNoon.getTime()) / 1000
         )
-        time360 = (secondsSinceLastNoon / 86400) * 359
+        const targetTime360 = (secondsSinceLastNoon / 86400) * 359
+        
+        // Animate from 0 to target on first acquisition
+        if (!hasAnimatedIn) {
+          hasAnimatedIn = true
+          gsap.to({ value: 0 }, {
+            value: targetTime360,
+            duration: 1.5,
+            ease: "power2.out",
+            onUpdate: function() {
+              time360 = this.targets()[0].value
+            }
+          })
+        } else {
+          time360 = targetTime360
+        }
       } else {
         time360 = 0 // Keep at 0 until we have location
       }
@@ -223,6 +240,16 @@
     geoEvents = [...geoEvents, e.detail]
     if (!e.detail) return;
     if (!e.detail.coords) return;
+    
+    // Animate time ring fade in when location is obtained
+    if (!hasLocation && timeRingElement) {
+      gsap.to(timeRingElement, {
+        opacity: 1,
+        duration: 1,
+        ease: "power2.out"
+      })
+    }
+    
     hasLocation = true // Mark that we have location
     coords.lat = e.detail.coords.latitude
     coords.long = e.detail.coords.longitude
@@ -288,7 +315,7 @@
           {date360.toFixed(0)}
         </div>
       </div>
-      <div class="timedonut h-60 w-60 md:h-96 md:w-96 rounded-full">
+      <div class="timedonut h-60 w-60 md:h-96 md:w-96 rounded-full" bind:this={timeRingElement} style="opacity: 0;">
         <svg class="circular-progress-time h-60 w-60 md:h-96 md:w-96">
           <circle class="bg"></circle>
           <circle class="sun-marker" bind:this={sunMarker}></circle>
