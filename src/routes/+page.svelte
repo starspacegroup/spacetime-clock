@@ -4,7 +4,13 @@
   import stardate from "stardate-converter"
   import suncalc from "suncalc"
   import getHemisphere from "$lib/getHemisphere"
+  import gsap from "gsap"
+  
   let datetime: Date = new Date()
+  
+  // SVG circle references for GSAP animations
+  let dateProgressCircle: SVGCircleElement
+  let timeProgressCircle: SVGCircleElement
 
   let juneSolstice = new Date(datetime.getFullYear(), 5, 21)
   let decemberSolstice = new Date(datetime.getFullYear(), 11, 21)
@@ -63,13 +69,62 @@
   let date100prog = (dayOfYear / 365.25) * 100
   let time360 = (datetime.getMinutes() / 24 / 60) * 359
   let time360deg = time360 + "deg"
-  let time100 = 0
   let sunrise360 = 250
   let sunrise360deg = sunrise360 + "deg"
   let sunset360 = 120
   let sunset360deg = sunset360 + "deg"
 
   onMount(() => {
+    // Calculate SVG circle properties for GSAP animations
+    const updateCircleProgress = () => {
+      if (!dateProgressCircle || !timeProgressCircle) return
+      
+      // Get the SVG parent elements to calculate actual sizes
+      const dateSvg = dateProgressCircle.closest('svg')
+      const timeSvg = timeProgressCircle.closest('svg')
+      
+      if (!dateSvg || !timeSvg) return
+      
+      // Calculate circle properties based on SVG viewBox or clientWidth
+      const dateSize = dateSvg.clientWidth || 384 // fallback to md size
+      const timeSize = timeSvg.clientWidth || 384
+      
+      const dateRadius = (dateSize - 20) / 2 // stroke-width is 20px
+      const timeRadius = (timeSize - 33) / 2 // stroke-width is 33px
+      
+      const dateCircumference = dateRadius * 2 * Math.PI
+      const timeCircumference = timeRadius * 2 * Math.PI
+      
+      // Animate date progress circle
+      const dateProgress = (dayOfYear / 365.25) * 100
+      const dateDash = (dateProgress * dateCircumference) / 100
+      gsap.to(dateProgressCircle, {
+        attr: {
+          "stroke-dasharray": `${dateDash} ${dateCircumference - dateDash}`
+        },
+        duration: 0.3,
+        ease: "linear"
+      })
+      
+      // Animate time progress circle
+      const timeProgress = (secondsSinceLastNoon / 86400) * 100
+      const timeDash = (timeProgress * timeCircumference) / 100
+      gsap.to(timeProgressCircle, {
+        attr: {
+          "stroke-dasharray": `${timeDash} ${timeCircumference - timeDash}`
+        },
+        rotation: time360 - 90,
+        transformOrigin: "50% 50%",
+        duration: 0.3,
+        ease: "linear"
+      })
+    }
+    
+    // Wait for elements to be mounted and sized
+    setTimeout(() => {
+      updateCircleProgress()
+    }, 100)
+    
     let refresher = setInterval(function () {
       datetime = new Date()
       date360 = (dayOfYear / 365.25) * 359
@@ -124,7 +179,6 @@
         (datetime.getTime() - lastNoon.getTime()) / 1000
       )
       time360 = (secondsSinceLastNoon / 86400) * 359
-      time100 = (secondsSinceLastNoon / 86400) * 100
 
       time360deg = time360 - 90 + "deg"
       sunrise360 =
@@ -133,6 +187,9 @@
       sunset360 =
         ((((sunset.getTime() / 1000) % 86400) / 86400) * 359 + 90) % 360
       sunset360deg = sunset360.toFixed(0) + "deg"
+      
+      // Update GSAP animations
+      updateCircleProgress()
     }, 9)
   })
 
@@ -181,7 +238,7 @@
 
 <div
   class="flex-col"
-  style="--time360deg: {time360deg}; --date360deg: {date360deg}; --date100prog: {date100prog}; --time100: {time100}; --sunrise360deg: {sunrise360deg}; --sunset360deg: {sunset360deg};"
+  style="--time360deg: {time360deg}; --date360deg: {date360deg}; --date100prog: {date100prog}; --sunrise360deg: {sunrise360deg}; --sunset360deg: {sunset360deg};"
 >
   <div class="flex min-h-screen relative">
     <div class="help-button flex absolute left-10 top-10 z-20 invisible">
@@ -213,7 +270,7 @@
       <div class="daydonut h-60 w-60 md:h-96 md:w-96 rounded-full">
         <svg class="circular-progress-date h-60 w-60 md:h-96 md:w-96">
           <circle class="bg"></circle>
-          <circle class="fg"></circle>
+          <circle class="fg" bind:this={dateProgressCircle}></circle>
         </svg>
 
         <div class="flex items-center justify-center h-full text-6xl">
@@ -223,7 +280,7 @@
       <div class="timedonut h-60 w-60 md:h-96 md:w-96 rounded-full">
         <svg class="circular-progress-time h-60 w-60 md:h-96 md:w-96">
           <circle class="bg"></circle>
-          <circle class="fg"></circle>
+          <circle class="fg" bind:this={timeProgressCircle}></circle>
         </svg>
 
         <div
@@ -286,19 +343,13 @@
   }
   .circular-progress-date {
     position: absolute;
-    --size: 100%;
-    --half-size: calc(var(--size) / 2);
-    --stroke-width: 20px;
-    --radius: calc((var(--size) - var(--stroke-width)) / 2);
-    --circumference: calc(var(--radius) * 3.14159265359 * 2);
-    --dash: calc((var(--date100prog) * var(--circumference)) / 100);
   }
 
   .circular-progress-date circle {
-    cx: var(--half-size);
-    cy: var(--half-size);
-    r: var(--radius);
-    stroke-width: var(--stroke-width);
+    cx: 50%;
+    cy: 50%;
+    r: calc((100% - 20px) / 2);
+    stroke-width: 20px;
     fill: none;
     stroke-linecap: round;
   }
@@ -309,9 +360,7 @@
 
   .circular-progress-date circle.fg {
     transform: rotate(-90deg);
-    transform-origin: var(--half-size) var(--half-size);
-    stroke-dasharray: var(--dash) calc(var(--circumference) - var(--dash));
-    transition: stroke-dasharray 0.3s linear 0s;
+    transform-origin: 50% 50%;
     stroke: theme("colors.year-progress");
   }
 
@@ -328,19 +377,13 @@
   }
   .circular-progress-time {
     position: absolute;
-    --size: 100%;
-    --half-size: calc(var(--size) / 2);
-    --stroke-width: 33px;
-    --radius: calc((var(--size) - var(--stroke-width)) / 2);
-    --circumference: calc(var(--radius) * 3.14159265359 * 2);
-    --dash: calc((var(--time100) * var(--circumference)) / 100);
   }
 
   .circular-progress-time circle {
-    cx: var(--half-size);
-    cy: var(--half-size);
-    r: var(--radius);
-    stroke-width: var(--stroke-width);
+    cx: 50%;
+    cy: 50%;
+    r: calc((100% - 33px) / 2);
+    stroke-width: 33px;
     fill: none;
     stroke-linecap: round;
   }
@@ -350,10 +393,6 @@
   }
 
   .circular-progress-time circle.fg {
-    transform: rotate(var(--time360deg));
-    transform-origin: var(--half-size) var(--half-size);
-    stroke-dasharray: var(--dash) calc(var(--circumference) - var(--dash));
-    transition: stroke-dasharray 0.3s linear 0s;
     stroke: theme("colors.sun");
   }
 </style>
