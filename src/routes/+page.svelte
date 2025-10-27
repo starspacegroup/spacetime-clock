@@ -383,6 +383,7 @@
     margin: 10px;
     display: inline-block;
     border-radius: 50%;
+    overflow: visible;
   }
   .circular-progress-date {
     position: absolute;
@@ -417,9 +418,11 @@
     margin: 10px;
     display: inline-block;
     border-radius: 50%;
+    overflow: visible;
   }
   .circular-progress-time {
     position: absolute;
+    overflow: visible;
   }
 
   .circular-progress-time circle.bg {
