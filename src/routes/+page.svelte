@@ -18,6 +18,7 @@
   let stardateText: HTMLDivElement
   let locationWarning: HTMLDivElement
   let sunriseInfo: HTMLDivElement
+  let timeNumberText: HTMLDivElement
 
   let juneSolstice = new Date(datetime.getFullYear(), 5, 21)
   let decemberSolstice = new Date(datetime.getFullYear(), 11, 21)
@@ -35,6 +36,7 @@
   let coords = { lat: 0, long: 0 }
   let hasLocation = false // Track if we have location data
   let hasAnimatedIn = false // Track if we've done the initial animation
+  let hasAnimatedSunriseSunset = false // Track if sunrise/sunset have been animated
   let lastNoon: Date = new Date(
     datetime.getFullYear(),
     datetime.getMonth(),
@@ -78,9 +80,9 @@
   let date100prog = (dayOfYear / 365.25) * 100
   let time360 = 180 // Start at bottom (180 degrees)
   let time360deg = time360 + "deg"
-  let sunrise360 = 90 // Default sunrise at 6am (90° from midnight at top)
+  let sunrise360 = 0 // Start at top, will animate to actual position
   let sunrise360deg = sunrise360 + "deg"
-  let sunset360 = 270 // Default sunset at 6pm (270° from midnight at top)
+  let sunset360 = 0 // Start at top, will animate to actual position
   let sunset360deg = sunset360 + "deg"
   
   // Reactive background style for time ring
@@ -92,9 +94,12 @@
   $: sunsetVisual = sunset360deg
   
   // Handle wrap-around case where sunset < sunrise (daylight wraps past midnight)
-  $: timeRingBackground = sunset360 > sunrise360 
-    ? `radial-gradient(hsl(264deg 100% 1%) 40%, transparent 41%), conic-gradient(from 90deg, hsl(51deg 91% 4%) 0deg ${sunriseVisual}, hsl(39deg 100% 50%) ${sunriseVisual} ${sunsetVisual}, hsl(51deg 91% 4%) ${sunsetVisual} 360deg)`
-    : `radial-gradient(hsl(264deg 100% 1%) 40%, transparent 41%), conic-gradient(from 90deg, hsl(39deg 100% 50%) 0deg ${sunsetVisual}, hsl(51deg 91% 4%) ${sunsetVisual} ${sunriseVisual}, hsl(39deg 100% 50%) ${sunriseVisual} 360deg)`
+  // When both are at 0 (before animation), show all dark
+  $: timeRingBackground = sunrise360 === 0 && sunset360 === 0
+    ? `radial-gradient(hsl(264deg 100% 1%) 40%, transparent 41%), conic-gradient(from 90deg, hsl(51deg 91% 4%) 0deg 360deg)`
+    : sunset360 > sunrise360 
+      ? `radial-gradient(hsl(264deg 100% 1%) 40%, transparent 41%), conic-gradient(from 90deg, hsl(51deg 91% 4%) 0deg ${sunriseVisual}, hsl(39deg 100% 50%) ${sunriseVisual} ${sunsetVisual}, hsl(51deg 91% 4%) ${sunsetVisual} 360deg)`
+      : `radial-gradient(hsl(264deg 100% 1%) 40%, transparent 41%), conic-gradient(from 90deg, hsl(39deg 100% 50%) 0deg ${sunsetVisual}, hsl(51deg 91% 4%) ${sunsetVisual} ${sunriseVisual}, hsl(39deg 100% 50%) ${sunriseVisual} 360deg)`
 
   onMount(() => {
     // Quick entrance animations (max 0.2s)
@@ -110,6 +115,11 @@
       duration: 0.2,
       stagger: 0.05
     }, "-=0.1")
+    .to(timeNumberText, {
+      opacity: 1,
+      duration: 0.2,
+      ease: "power2.out"
+    }, "<")
     .from([utcTimeText, stardateText], {
       opacity: 0,
       y: 10,
@@ -260,11 +270,30 @@
       let sunset360Raw = ((secondsSinceSunsetNoon / 86400) * 360) - 90
       
       // Normalize to 0-360 range
-      sunrise360 = ((sunrise360Raw % 360) + 360) % 360
-      sunset360 = ((sunset360Raw % 360) + 360) % 360
+      const targetSunrise360 = ((sunrise360Raw % 360) + 360) % 360
+      const targetSunset360 = ((sunset360Raw % 360) + 360) % 360
       
-      sunrise360deg = sunrise360.toFixed(0) + "deg"
-      sunset360deg = sunset360.toFixed(0) + "deg"
+      // Animate sunrise/sunset on first acquisition
+      if (hasLocation && !hasAnimatedSunriseSunset) {
+        hasAnimatedSunriseSunset = true
+        gsap.to({ sunrise: 0, sunset: 0 }, {
+          sunrise: targetSunrise360,
+          sunset: targetSunset360,
+          duration: 0.2,
+          ease: "power2.out",
+          onUpdate: function() {
+            sunrise360 = this.targets()[0].sunrise
+            sunset360 = this.targets()[0].sunset
+            sunrise360deg = sunrise360.toFixed(0) + "deg"
+            sunset360deg = sunset360.toFixed(0) + "deg"
+          }
+        })
+      } else {
+        sunrise360 = targetSunrise360
+        sunset360 = targetSunset360
+        sunrise360deg = sunrise360.toFixed(0) + "deg"
+        sunset360deg = sunset360.toFixed(0) + "deg"
+      }
       
       // Update GSAP animations
       updateCircleProgress()
@@ -470,7 +499,7 @@
         <div
           class="flex items-center h-full w-full justify-center text-3xl md:text-6xl timeindicator"
         >
-          <div>{time360.toFixed(2)}</div>
+          <div bind:this={timeNumberText} style="opacity: 0">{time360.toFixed(2)}</div>
         </div>
       </div>
     </div>
@@ -691,10 +720,10 @@
   }
 
   .circular-progress-time circle.sun-marker {
-    r: 16px;
+    r: 24px;
     fill: theme("colors.sun");
     stroke: none;
-    filter: drop-shadow(0 0 6px theme("colors.sun"));
+    filter: drop-shadow(0 0 9px theme("colors.sun"));
   }
 
   .info-text {
