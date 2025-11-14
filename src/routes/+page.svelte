@@ -464,7 +464,7 @@
           <circle class="fg" bind:this={dateProgressCircle}></circle>
         </svg>
 
-        <div class="flex items-center justify-center h-full text-6xl">
+        <div class="flex items-center justify-center h-full text-6xl" style="color: hsl(127deg, 20%, 40%);">
           {date360.toFixed(0)}
         </div>
       </div>
@@ -499,7 +499,7 @@
         <div
           class="flex items-center h-full w-full justify-center text-3xl md:text-6xl timeindicator"
         >
-          <div bind:this={timeNumberText} style="opacity: 0">{time360.toFixed(2)}</div>
+          <div bind:this={timeNumberText} style="opacity: 0; color: hsl(310deg, 20%, 50%);">{time360.toFixed(2)}</div>
         </div>
       </div>
     </div>
