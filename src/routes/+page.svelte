@@ -76,7 +76,7 @@
   let date360 = (dayOfYear / 365.25) * 359
   let date360deg = date360 + "deg"
   let date100prog = (dayOfYear / 365.25) * 100
-  let time360 = 0 // Default to 0 until we have location
+  let time360 = 180 // Start at bottom (180 degrees)
   let time360deg = time360 + "deg"
   let sunrise360 = 90 // Default sunrise at 6am (90° from midnight at top)
   let sunrise360deg = sunrise360 + "deg"
@@ -155,14 +155,9 @@
       const markerX = centerX + markerRadius * Math.cos(angle)
       const markerY = centerY + markerRadius * Math.sin(angle)
       
-      gsap.to(sunMarker, {
-        attr: {
-          "cx": markerX,
-          "cy": markerY
-        },
-        duration: 0.2,
-        ease: "power2.out"
-      })
+      // Set sun marker position directly without animation
+      sunMarker.setAttribute("cx", markerX.toString())
+      sunMarker.setAttribute("cy", markerY.toString())
     }
     
     // Wait for elements to be mounted and sized
@@ -228,22 +223,29 @@
         )
         const targetTime360 = (secondsSinceLastNoon / 86400) * 359
         
-        // Animate from 0 to target on first acquisition
+        // Animate from bottom (180) to target on first acquisition, following circular path
         if (!hasAnimatedIn) {
           hasAnimatedIn = true
-          gsap.to({ value: 0 }, {
+          gsap.to({ value: 180 }, {
             value: targetTime360,
-            duration: 1.5,
+            duration: 0.2,
             ease: "power2.out",
             onUpdate: function() {
               time360 = this.targets()[0].value
+              updateCircleProgress()
             }
+          })
+          // Fade in sun marker
+          gsap.to(sunMarker, {
+            opacity: 1,
+            duration: 0.2,
+            ease: "power2.out"
           })
         } else {
           time360 = targetTime360
         }
       } else {
-        time360 = 0 // Keep at 0 until we have location
+        time360 = 180 // Keep at bottom until we have location
       }
 
       time360deg = time360 - 90 + "deg"
@@ -446,7 +448,7 @@
         role="img"
         aria-label="Time ring showing current time position"
       >
-        <svg class="circular-progress-time h-60 w-60 md:h-96 md:w-96 drop-shadow-2xl">
+        <svg class="circular-progress-time h-60 w-60 md:h-96 md:w-96 drop-shadow-2xl" viewBox="0 0 384 384">
           <defs>
             <filter id="glow-sun">
               <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
@@ -462,7 +464,7 @@
           </defs>
           <circle class="outer-bg"></circle>
           <circle class="bg"></circle>
-          <circle class="sun-marker" bind:this={sunMarker}></circle>
+          <circle class="sun-marker" bind:this={sunMarker} cx="192" cy="368" opacity="0"></circle>
         </svg>
 
         <div
