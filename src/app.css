@@ -14,8 +14,10 @@
     --daytime: 39deg, 100%, 50%;
     --nighttime: 51deg, 91%, 4%;
     --sun: 310deg, 100%, 50%;
-    --summer: 24deg, 96%, 48%;
-    --winter: 207deg, 90%, 54%;
+    --summer: 55deg, 100%, 50%;
+    --autumn: 25deg, 85%, 50%;
+    --winter: 200deg, 80%, 65%;
+    --spring: 130deg, 70%, 55%;
     --year-progress: 127deg, 100%, 18%;
 
     scroll-behavior: smooth;

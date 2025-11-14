@@ -604,9 +604,15 @@
   .daydonut {
     background: radial-gradient(theme("colors.background") 40%, transparent 41%),
       conic-gradient(
-        theme("colors.summer") 0deg 90deg,
-        theme("colors.winter") 90deg 270deg,
-        theme("colors.summer") 270deg 360deg
+        theme("colors.summer") 0deg,
+        theme("colors.summer") 45deg,
+        theme("colors.autumn") 136deg,
+        theme("colors.autumn") 136deg,
+        theme("colors.winter") 227deg,
+        theme("colors.winter") 227deg,
+        theme("colors.spring") 318deg,
+        theme("colors.spring") 318deg,
+        theme("colors.summer") 360deg
       );
     margin: 10px;
     display: inline-block;
@@ -749,9 +755,15 @@
   .daydonut-help {
     background: radial-gradient(theme("colors.background") 40%, transparent 41%),
       conic-gradient(
-        theme("colors.summer") 0deg 90deg,
-        theme("colors.winter") 90deg 270deg,
-        theme("colors.summer") 270deg 360deg
+        theme("colors.summer") 0deg,
+        theme("colors.summer") 45deg,
+        theme("colors.autumn") 136deg,
+        theme("colors.autumn") 136deg,
+        theme("colors.winter") 227deg,
+        theme("colors.winter") 227deg,
+        theme("colors.spring") 318deg,
+        theme("colors.spring") 318deg,
+        theme("colors.summer") 360deg
       );
     border: 2px solid rgba(255, 255, 255, 0.1);
   }
