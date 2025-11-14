@@ -72,10 +72,23 @@
   let date100prog = (dayOfYear / 365.25) * 100
   let time360 = 0 // Default to 0 until we have location
   let time360deg = time360 + "deg"
-  let sunrise360 = 250
+  let sunrise360 = 90 // Default sunrise at 6am (90° from midnight at top)
   let sunrise360deg = sunrise360 + "deg"
-  let sunset360 = 120
+  let sunset360 = 270 // Default sunset at 6pm (270° from midnight at top)
   let sunset360deg = sunset360 + "deg"
+  
+  // Reactive background style for time ring
+  // Conic gradient needs to rotate by 90deg to align with our coordinate system where top = 0
+  // In our system: top=0, right=90, bottom=180, left=270
+  // In CSS conic: right=0, bottom=90, left=180, top=270
+  // So we need to add 90 to our angles to convert to CSS conic coordinates
+  $: sunriseVisual = sunrise360deg
+  $: sunsetVisual = sunset360deg
+  
+  // Handle wrap-around case where sunset < sunrise (daylight wraps past midnight)
+  $: timeRingBackground = sunset360 > sunrise360 
+    ? `radial-gradient(hsl(264deg 100% 1%) 40%, transparent 41%), conic-gradient(from 90deg, hsl(51deg 91% 4%) 0deg ${sunriseVisual}, hsl(39deg 100% 50%) ${sunriseVisual} ${sunsetVisual}, hsl(51deg 91% 4%) ${sunsetVisual} 360deg)`
+    : `radial-gradient(hsl(264deg 100% 1%) 40%, transparent 41%), conic-gradient(from 90deg, hsl(39deg 100% 50%) 0deg ${sunsetVisual}, hsl(51deg 91% 4%) ${sunsetVisual} ${sunriseVisual}, hsl(39deg 100% 50%) ${sunriseVisual} 360deg)`
 
   onMount(() => {
     // Calculate SVG circle properties for GSAP animations
@@ -208,11 +221,21 @@
       }
 
       time360deg = time360 - 90 + "deg"
-      sunrise360 =
-        ((((sunrise.getTime() / 1000) % 86400) / 86400) * 359 + 45) % 360
+      
+      // Calculate sunrise/sunset positions relative to solar noon (same as time360)
+      // Sunrise is before noon (negative offset from noon), sunset is after noon (positive offset)
+      const secondsSinceSunriseNoon = (sunrise.getTime() - lastNoon.getTime()) / 1000
+      const secondsSinceSunsetNoon = (sunset.getTime() - lastNoon.getTime()) / 1000
+      
+      // Convert to degrees (0-360 range) and apply -90 offset to match visual coordinate system
+      let sunrise360Raw = ((secondsSinceSunriseNoon / 86400) * 360) - 90
+      let sunset360Raw = ((secondsSinceSunsetNoon / 86400) * 360) - 90
+      
+      // Normalize to 0-360 range
+      sunrise360 = ((sunrise360Raw % 360) + 360) % 360
+      sunset360 = ((sunset360Raw % 360) + 360) % 360
+      
       sunrise360deg = sunrise360.toFixed(0) + "deg"
-      sunset360 =
-        ((((sunset.getTime() / 1000) % 86400) / 86400) * 359 + 90) % 360
       sunset360deg = sunset360.toFixed(0) + "deg"
       
       // Update GSAP animations
@@ -315,7 +338,7 @@
           {date360.toFixed(0)}
         </div>
       </div>
-      <div class="timedonut h-60 w-60 md:h-96 md:w-96 rounded-full" bind:this={timeRingElement} style="opacity: 0;">
+      <div class="timedonut h-60 w-60 md:h-96 md:w-96 rounded-full" bind:this={timeRingElement} style="opacity: 0; background: {timeRingBackground};">
         <svg class="circular-progress-time h-60 w-60 md:h-96 md:w-96">
           <circle class="bg"></circle>
           <circle class="sun-marker" bind:this={sunMarker}></circle>
@@ -411,9 +434,10 @@
   .timedonut {
     background: radial-gradient(theme("colors.background") 40%, transparent 41%),
       conic-gradient(
-        theme("colors.daytime") 0% var(--sunset360deg),
-        theme("colors.nighttime") var(--sunset360deg) var(--sunrise360deg),
-        theme("colors.daytime") var(--sunrise360deg) 100%
+        from -90deg,
+        theme("colors.nighttime") 0deg var(--sunrise360deg),
+        theme("colors.daytime") var(--sunrise360deg) var(--sunset360deg),
+        theme("colors.nighttime") var(--sunset360deg) 360deg
       );
     margin: 10px;
     display: inline-block;
@@ -431,7 +455,7 @@
     r: calc((100% - 33px) / 2);
     stroke-width: 33px;
     fill: none;
-    stroke: theme("colors.background");
+    stroke: transparent;
   }
 
   .circular-progress-time circle.sun-marker {
