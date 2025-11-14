@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte"
+  import { onMount, onDestroy } from "svelte"
   import Geolocation from "svelte-geolocation"
   import stardate from "stardate-converter"
   import suncalc from "suncalc"
@@ -11,7 +11,13 @@
   // SVG circle references for GSAP animations
   let dateProgressCircle: SVGCircleElement
   let sunMarker: SVGCircleElement
-  let timeRingElement: HTMLDivElement // Reference to time ring container
+  let timeRingElement: HTMLDivElement
+  let dateRingElement: HTMLDivElement
+  let mainContainer: HTMLDivElement
+  let utcTimeText: HTMLDivElement
+  let stardateText: HTMLDivElement
+  let locationWarning: HTMLDivElement
+  let sunriseInfo: HTMLDivElement
 
   let juneSolstice = new Date(datetime.getFullYear(), 5, 21)
   let decemberSolstice = new Date(datetime.getFullYear(), 11, 21)
@@ -91,6 +97,26 @@
     : `radial-gradient(hsl(264deg 100% 1%) 40%, transparent 41%), conic-gradient(from 90deg, hsl(39deg 100% 50%) 0deg ${sunsetVisual}, hsl(51deg 91% 4%) ${sunsetVisual} ${sunriseVisual}, hsl(39deg 100% 50%) ${sunriseVisual} 360deg)`
 
   onMount(() => {
+    // Quick entrance animations (max 0.2s)
+    const tl = gsap.timeline({ defaults: { ease: "power2.out" } })
+    
+    tl.from(mainContainer, {
+      opacity: 0,
+      duration: 0.2
+    })
+    .from([dateRingElement, timeRingElement], {
+      opacity: 0,
+      scale: 0.9,
+      duration: 0.2,
+      stagger: 0.05
+    }, "-=0.1")
+    .from([utcTimeText, stardateText], {
+      opacity: 0,
+      y: 10,
+      stagger: 0.05,
+      duration: 0.15
+    }, "-=0.1")
+    
     // Calculate SVG circle properties for GSAP animations
     const updateCircleProgress = () => {
       if (!dateProgressCircle || !sunMarker) return
@@ -110,15 +136,15 @@
       
       const dateCircumference = dateRadius * 2 * Math.PI
       
-      // Animate date progress circle
+      // Animate date progress circle with smooth easing
       const dateProgress = (dayOfYear / 365.25) * 100
       const dateDash = (dateProgress * dateCircumference) / 100
       gsap.to(dateProgressCircle, {
         attr: {
           "stroke-dasharray": `${dateDash} ${dateCircumference - dateDash}`
         },
-        duration: 0.3,
-        ease: "linear"
+        duration: 0.2,
+        ease: "power2.out"
       })
       
       // Animate sun marker position
@@ -134,8 +160,8 @@
           "cx": markerX,
           "cy": markerY
         },
-        duration: 0.3,
-        ease: "linear"
+        duration: 0.2,
+        ease: "power2.out"
       })
     }
     
@@ -144,7 +170,7 @@
       updateCircleProgress()
     }, 100)
     
-    let refresher = setInterval(function () {
+    refreshInterval = setInterval(function () {
       datetime = new Date()
       date360 = (dayOfYear / 365.25) * 359
       if (geoEvents.length > 0) {
@@ -244,17 +270,56 @@
   })
 
   function toggleHelp() {
-    // toggle visibility of .help-overlay:
+    // toggle visibility of .help-overlay with quick GSAP animation
     let overlay = document.getElementsByClassName(
       "help-overlay"
     ) as HTMLCollectionOf<HTMLElement>
+    
     if (overlay[0].style.visibility == "visible") {
-      overlay[0].style.visibility = "hidden"
+      gsap.to(overlay[0], {
+        opacity: 0,
+        duration: 0.2,
+        ease: "power2.inOut",
+        onComplete: () => {
+          overlay[0].style.visibility = "hidden"
+        }
+      })
     } else {
       overlay[0].style.visibility = "visible"
+      overlay[0].style.opacity = "0"
+      gsap.to(overlay[0], {
+        opacity: 1,
+        duration: 0.2,
+        ease: "power2.inOut"
+      })
     }
-    // doc1ument.getElementsByClassName('help-overlay')
   }
+  
+  function handleRingHover(ring: HTMLDivElement, isEntering: boolean) {
+    if (!ring) return
+    
+    if (isEntering) {
+      gsap.to(ring, {
+        scale: 1.02,
+        duration: 0.15,
+        ease: "power2.out"
+      })
+    } else {
+      gsap.to(ring, {
+        scale: 1,
+        duration: 0.15,
+        ease: "power2.out"
+      })
+    }
+  }
+  
+  let refreshInterval: number | null = null
+  
+  onDestroy(() => {
+    if (refreshInterval) {
+      clearInterval(refreshInterval)
+    }
+  })
 </script>
 
 <Geolocation
@@ -264,13 +329,22 @@
     if (!e.detail) return;
     if (!e.detail.coords) return;
     
-    // Animate time ring fade in when location is obtained
+    // Quick fade in when location is obtained
     if (!hasLocation && timeRingElement) {
       gsap.to(timeRingElement, {
         opacity: 1,
-        duration: 1,
+        duration: 0.2,
         ease: "power2.out"
       })
+      
+      // Fade out the location warning
+      if (locationWarning) {
+        gsap.to(locationWarning, {
+          opacity: 0,
+          duration: 0.2,
+          ease: "power2.in"
+        })
+      }
     }
     
     hasLocation = true // Mark that we have location
@@ -298,38 +372,63 @@
 />
 
 <div
-  class="flex-col"
+  class="flex-col relative overflow-hidden"
   style="--time360deg: {time360deg}; --date360deg: {date360deg}; --date100prog: {date100prog}; --sunrise360deg: {sunrise360deg}; --sunset360deg: {sunset360deg};"
 >
-  <div class="flex min-h-screen relative">
+  <!-- Animated background particles -->
+  <div class="particles-bg"></div>
+  
+  <div class="flex min-h-screen relative" bind:this={mainContainer}>
     <div class="help-button flex absolute left-10 top-10 z-20 invisible">
       <button
         on:click={toggleHelp}
-        class="text-2xl font-bold bg-slate-500 p-3 px-5 bg-opacity-20 rounded-md"
+        class="text-2xl font-bold bg-slate-500 p-3 px-5 bg-opacity-20 rounded-md hover:bg-opacity-40 transition-all duration-300 hover:scale-110"
         >?</button
       >
     </div>
     <div
-      class="help-overlay m-auto md:flex space-x-0 md:space-x-8 space-y-8 md:space-y-0 items-center justify-center text-center flex h-screen w-screen z-10 absolute invisible -ml-3"
+      class="help-overlay m-auto md:flex space-x-0 md:space-x-8 space-y-8 md:space-y-0 items-center justify-center text-center flex h-screen w-screen z-10 absolute invisible -ml-3 backdrop-blur-md"
     >
-      <div class="daydonut-help h-60 w-60 md:h-96 md:w-96 rounded-full">
+      <div class="daydonut-help h-60 w-60 md:h-96 md:w-96 rounded-full shadow-2xl">
         <div class="flex items-center justify-center h-full text-3xl font-thin">
-          <div class="mt-24 text-red-600">Date 360</div>
+          <div class="mt-24 text-red-600 animate-pulse">Date 360</div>
         </div>
       </div>
-      <div class="timedonut-help h-60 w-60 md:h-96 md:w-96 rounded-full">
+      <div class="timedonut-help h-60 w-60 md:h-96 md:w-96 rounded-full shadow-2xl">
         <div
           class="flex items-center h-full w-full justify-center text-3xl font-thin timeindicator"
         >
-          <div class="mt-24 text-red-600">Time 360</div>
+          <div class="mt-24 text-red-600 animate-pulse">Time 360</div>
         </div>
       </div>
     </div>
     <div
-      class="m-auto md:flex space-x-0 md:space-x-8 space-y-8 md:space-y-0 items-center justify-center text-center"
+      class="m-auto md:flex space-x-0 md:space-x-8 space-y-8 md:space-y-0 items-center justify-center text-center perspective-container"
     >
-      <div class="daydonut h-60 w-60 md:h-96 md:w-96 rounded-full">
-        <svg class="circular-progress-date h-60 w-60 md:h-96 md:w-96">
+      <div 
+        class="daydonut h-60 w-60 md:h-96 md:w-96 rounded-full ring-glow hover-float" 
+        bind:this={dateRingElement}
+        on:mouseenter={() => handleRingHover(dateRingElement, true)}
+        on:mouseleave={() => handleRingHover(dateRingElement, false)}
+        role="img"
+        aria-label="Date ring showing day of year progress"
+      >
+        <svg class="circular-progress-date h-60 w-60 md:h-96 md:w-96 drop-shadow-2xl">
+          <defs>
+            <filter id="glow-date">
+              <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+            <linearGradient id="yearGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:hsl(127deg, 100%, 28%);stop-opacity:1" />
+              <stop offset="50%" style="stop-color:hsl(127deg, 100%, 18%);stop-opacity:1" />
+              <stop offset="100%" style="stop-color:hsl(127deg, 100%, 38%);stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          <circle class="outer-bg"></circle>
           <circle class="bg"></circle>
           <circle class="fg" bind:this={dateProgressCircle}></circle>
         </svg>
@@ -338,8 +437,30 @@
           {date360.toFixed(0)}
         </div>
       </div>
-      <div class="timedonut h-60 w-60 md:h-96 md:w-96 rounded-full" bind:this={timeRingElement} style="opacity: 0; background: {timeRingBackground};">
-        <svg class="circular-progress-time h-60 w-60 md:h-96 md:w-96">
+      <div 
+        class="timedonut h-60 w-60 md:h-96 md:w-96 rounded-full ring-glow hover-float" 
+        bind:this={timeRingElement} 
+        style="opacity: 1; background: {timeRingBackground};"
+        on:mouseenter={() => handleRingHover(timeRingElement, true)}
+        on:mouseleave={() => handleRingHover(timeRingElement, false)}
+        role="img"
+        aria-label="Time ring showing current time position"
+      >
+        <svg class="circular-progress-time h-60 w-60 md:h-96 md:w-96 drop-shadow-2xl">
+          <defs>
+            <filter id="glow-sun">
+              <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+            <radialGradient id="sunGradient">
+              <stop offset="0%" style="stop-color:hsl(310deg, 100%, 70%);stop-opacity:1" />
+              <stop offset="100%" style="stop-color:hsl(310deg, 100%, 50%);stop-opacity:1" />
+            </radialGradient>
+          </defs>
+          <circle class="outer-bg"></circle>
           <circle class="bg"></circle>
           <circle class="sun-marker" bind:this={sunMarker}></circle>
         </svg>
@@ -353,40 +474,52 @@
     </div>
   </div>
 
-  <div class="flex items-center justify-center text-3xl p-8">
-    {datetime.getUTCFullYear() +
-      "/" +
-      (datetime.getUTCMonth() + 1).toString().padStart(2, "0") +
-      "/" +
-      datetime.getUTCDate().toString().padStart(2, "0")}
-    {datetime.getUTCHours().toString().padStart(2, "0")}:{datetime
-      .getUTCMinutes()
-      .toString()
-      .padStart(2, "0")}:{datetime.getUTCSeconds().toString().padStart(2, "0")}
-    UTC/GMT
+  <div class="flex items-center justify-center text-2xl md:text-4xl p-8 font-light tracking-wide info-text" bind:this={utcTimeText}>
+    <div class="backdrop-blur-sm bg-background/30 px-6 py-3 rounded-2xl shadow-xl border border-foreground/10">
+      {datetime.getUTCFullYear() +
+        "/" +
+        (datetime.getUTCMonth() + 1).toString().padStart(2, "0") +
+        "/" +
+        datetime.getUTCDate().toString().padStart(2, "0")}
+      <span class="mx-2 text-accent">•</span>
+      {datetime.getUTCHours().toString().padStart(2, "0")}:{datetime
+        .getUTCMinutes()
+        .toString()
+        .padStart(2, "0")}:{datetime.getUTCSeconds().toString().padStart(2, "0")}
+      <span class="text-primary ml-2 text-xl md:text-2xl">UTC/GMT</span>
+    </div>
   </div>
-  <div class="flex items-center justify-center text-3xl">
-    Stardate: {currentStardate}
+  <div class="flex items-center justify-center text-2xl md:text-4xl font-light mb-8 info-text" bind:this={stardateText}>
+    <div class="backdrop-blur-sm bg-background/30 px-6 py-3 rounded-2xl shadow-xl border border-foreground/10">
+      <span class="text-accent">Stardate:</span> <span class="font-mono text-primary">{currentStardate}</span>
+    </div>
   </div>
   {#if !hasLocation}
-    <div class="flex items-center justify-center text-xl md:text-2xl text-yellow-400 mt-4">
-      ⚠️ Waiting for location... Time ring at 0° (midnight)
+    <div class="flex items-center justify-center text-lg md:text-2xl text-yellow-400 mt-4 animate-pulse" bind:this={locationWarning}>
+      <div class="backdrop-blur-sm bg-yellow-900/20 px-6 py-3 rounded-2xl shadow-xl border border-yellow-400/30">
+        ⚠️ Waiting for location... Time ring at 0° (midnight)
+      </div>
     </div>
   {/if}
   <div
-    class="items-center justify-center text-xl md:text-3xl max-w-screen-md overflow-hidden"
+    class="flex flex-col items-center justify-center text-sm md:text-lg max-w-screen-md mx-auto opacity-50 hover:opacity-100 transition-opacity duration-500 p-4" bind:this={sunriseInfo}
   >
-    <p>Sunrise: {sunrise360deg}</p>
-    <p>Sunset: {sunset360deg}</p>
-    <p>Sunrise: {(sunrise.getTime() / 1000) % 86400}</p>
-    <p>Sunset: {(sunset.getTime() / 1000) % 86400}</p>
-    <p class="text-wrap">coords: {JSON.stringify(coords)}</p>
+    <div class="backdrop-blur-sm bg-background/20 px-4 py-2 rounded-xl space-y-1">
+      <p><span class="text-secondary">Sunrise:</span> {sunrise360deg}</p>
+      <p><span class="text-secondary">Sunset:</span> {sunset360deg}</p>
+      <p class="text-xs opacity-70">Sunrise: {(sunrise.getTime() / 1000) % 86400}</p>
+      <p class="text-xs opacity-70">Sunset: {(sunset.getTime() / 1000) % 86400}</p>
+      <p class="text-xs opacity-50 text-wrap break-all">coords: {JSON.stringify(coords)}</p>
+    </div>
   </div>
 </div>
-<footer class="text-center p-8">
-  <a href="https://github.com/starspacegroup/spacetime-clock"
-    >Open Source on GitHub</a
+<footer class="text-center p-8 mt-12">
+  <a 
+    href="https://github.com/starspacegroup/spacetime-clock"
+    class="inline-block px-6 py-3 rounded-xl backdrop-blur-sm bg-background/30 border border-foreground/10 hover:border-primary/50 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/20"
   >
+    <span class="text-lg">Open Source on GitHub</span>
+  </a>
 </footer>
 
 <input type="hidden" bind:value={time360deg} />
@@ -396,6 +529,47 @@
 <input type="hidden" bind:value={sunset360deg} />
 
 <style>
+  .particles-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background: 
+      radial-gradient(circle at 20% 30%, rgba(265, 95%, 57%, 0.05) 0%, transparent 40%),
+      radial-gradient(circle at 80% 70%, rgba(135, 73%, 49%, 0.05) 0%, transparent 40%),
+      radial-gradient(circle at 50% 50%, rgba(310, 100%, 50%, 0.03) 0%, transparent 50%);
+  }
+
+  .perspective-container {
+    perspective: 1500px;
+  }
+
+  .hover-float {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+  }
+
+  .hover-float:hover {
+    transform: translateY(-5px) scale(1.02);
+  }
+
+  .ring-glow {
+    box-shadow: 
+      0 0 20px rgba(265, 95%, 57%, 0.1),
+      0 0 40px rgba(265, 95%, 57%, 0.05),
+      0 10px 50px rgba(0, 0, 0, 0.3);
+    transition: box-shadow 0.3s ease;
+  }
+
+  .ring-glow:hover {
+    box-shadow: 
+      0 0 30px rgba(265, 95%, 57%, 0.2),
+      0 0 60px rgba(265, 95%, 57%, 0.1),
+      0 15px 70px rgba(0, 0, 0, 0.4);
+  }
+
   .daydonut {
     background: radial-gradient(theme("colors.background") 40%, transparent 41%),
       conic-gradient(
@@ -407,7 +581,25 @@
     display: inline-block;
     border-radius: 50%;
     overflow: visible;
+    position: relative;
   }
+
+  .daydonut::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, 
+      transparent 0%, 
+      rgba(127, 100%, 18%, 0.2) 50%, 
+      transparent 100%);
+    opacity: 0;
+    pointer-events: none;
+  }
+
   .circular-progress-date {
     position: absolute;
   }
@@ -419,16 +611,27 @@
     stroke-width: 20px;
     fill: none;
     stroke-linecap: round;
+    transition: stroke 0.3s ease;
+  }
+
+  .circular-progress-date circle.outer-bg {
+    cx: 50%;
+    cy: 50%;
+    r: calc(50% - 10px);
+    stroke-width: 20px;
+    fill: none;
+    stroke: theme("colors.background");
   }
 
   .circular-progress-date circle.bg {
-    stroke: theme("colors.background");
+    stroke: transparent;
   }
 
   .circular-progress-date circle.fg {
     transform: rotate(-90deg);
     transform-origin: 50% 50%;
     stroke: theme("colors.year-progress");
+    filter: drop-shadow(0 0 4px theme("colors.year-progress"));
   }
 
   .timedonut {
@@ -443,10 +646,37 @@
     display: inline-block;
     border-radius: 50%;
     overflow: visible;
+    position: relative;
   }
+
+  .timedonut::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: 50%;
+    background: linear-gradient(90deg, 
+      transparent 0%, 
+      rgba(39, 100%, 50%, 0.2) 50%, 
+      transparent 100%);
+    opacity: 0;
+    pointer-events: none;
+  }
+
   .circular-progress-time {
     position: absolute;
     overflow: visible;
+  }
+
+  .circular-progress-time circle.outer-bg {
+    cx: 50%;
+    cy: 50%;
+    r: calc(50% - 16.5px);
+    stroke-width: 33px;
+    fill: none;
+    stroke: theme("colors.background");
   }
 
   .circular-progress-time circle.bg {
@@ -462,5 +692,47 @@
     r: 16px;
     fill: theme("colors.sun");
     stroke: none;
+    filter: drop-shadow(0 0 6px theme("colors.sun"));
+  }
+
+  .info-text {
+    animation: fadeInUp 1s ease-out;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Enhanced help overlay */
+  .help-overlay {
+    background: rgba(0, 0, 0, 0.7);
+  }
+
+  .daydonut-help {
+    background: radial-gradient(theme("colors.background") 40%, transparent 41%),
+      conic-gradient(
+        theme("colors.summer") 0deg 90deg,
+        theme("colors.winter") 90deg 270deg,
+        theme("colors.summer") 270deg 360deg
+      );
+    border: 2px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .timedonut-help {
+    background: radial-gradient(theme("colors.background") 40%, transparent 41%),
+      conic-gradient(
+        from -90deg,
+        theme("colors.nighttime") 0deg 90deg,
+        theme("colors.daytime") 90deg 270deg,
+        theme("colors.nighttime") 270deg 360deg
+      );
+    border: 2px solid rgba(255, 255, 255, 0.1);
   }
 </style>
